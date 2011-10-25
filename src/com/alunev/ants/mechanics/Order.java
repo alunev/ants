@@ -15,7 +15,7 @@ public class Order {
      * @param tile map tile with my ant
      * @param direction direction in which to move my ant
      */
-    public Order(Tile tile, Aim direction) {
+    public Order(Tile tile, Direction direction) {
         row = tile.getRow();
         col = tile.getCol();
         this.direction = direction.getSymbol();

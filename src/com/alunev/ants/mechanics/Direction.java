@@ -5,7 +5,7 @@ import java.util.Map;
 /**
  * Represents a direction in which to move an ant.
  */
-public enum Aim {
+public enum Direction {
     /** Dummy none */
     NONE(0, 0, ' '),
 
@@ -21,7 +21,7 @@ public enum Aim {
     /** West direction or left. */
     WEST(0, -1, 'w');
 
-    private static final Map<Character, Aim> symbolLookup = new HashMap<Character, Aim>();
+    private static final Map<Character, Direction> symbolLookup = new HashMap<Character, Direction>();
 
     static {
         symbolLookup.put(' ', NONE);
@@ -37,7 +37,7 @@ public enum Aim {
 
     private final char symbol;
 
-    Aim(int rowDelta, int colDelta, char symbol) {
+    Direction(int rowDelta, int colDelta, char symbol) {
         this.rowDelta = rowDelta;
         this.colDelta = colDelta;
         this.symbol = symbol;
@@ -77,7 +77,7 @@ public enum Aim {
      *
      * @return direction associated with specified symbol
      */
-    public static Aim fromSymbol(char symbol) {
+    public static Direction fromSymbol(char symbol) {
         return symbolLookup.get(symbol);
     }
 }

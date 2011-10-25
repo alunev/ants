@@ -1,8 +1,6 @@
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
@@ -13,7 +11,7 @@ import com.alunev.ants.Ants;
 import com.alunev.ants.bot.Bot;
 import com.alunev.ants.logic.Route;
 import com.alunev.ants.logic.RouteWithWeight;
-import com.alunev.ants.mechanics.Aim;
+import com.alunev.ants.mechanics.Direction;
 import com.alunev.ants.mechanics.Tile;
 
 /**
@@ -34,8 +32,6 @@ public class MyBot extends Bot {
         new MyBot().readSystemInput();
     }
 
-
-
     @Override
     public void setup(int loadTime, int turnTime, int rows, int cols,
             int turns, int viewRadius2, int attackRadius2, int spawnRadius2) {
@@ -50,54 +46,24 @@ public class MyBot extends Bot {
         }
     }
 
-
-
     /**
-     * For every ant check every direction in fixed order (N, E, S, W) and move it if the tile is
-     * passable.
+     * Main method - all orders are issued here.
      */
     @Override
     public void doTurn() {
         Ants ants = getAnts();
         reservedTiles.clear();
 
-        // prevent stepping on own hill
-        for(Tile tile : ants.getMyHills()) {
-            ants.issueOrder(tile, Aim.NONE);
-        }
+        preventSteppingOnOwnHill(ants);
 
+        unblockOwnHill(ants);
 
+        lookAndMoveForFood(ants);
 
-        // unblock own hill
-        for(Tile hill : ants.getMyHills()) {
-            if (ants.getMyAnts().contains(hill) && !ants.getOrders().contains(hill)) {
-                for (Aim direction : Aim.values()) {
-                    if (doMoveInDirection(hill, direction)) {
-                        break;
-                    }
-                }
-            }
-        }
+        exploreMapMoves(ants);
+    }
 
-        // move to food
-        Map<Tile, Tile> foodTargets = new HashMap<Tile, Tile>();
-
-        // find close food
-        SortedMap<Integer, Route> ant_dist = new TreeMap<Integer, Route>();
-        for (Tile foodLoc : ants.getFoodTiles()) {
-            for (Tile antLoc : ants.getMyAnts()) {
-                Integer dist = ants.getDistance(antLoc, foodLoc);
-                ant_dist.put(dist, new Route(antLoc, foodLoc));
-            }
-        }
-
-        for (Route route : ant_dist.values()) {
-            if (!foodTargets.containsKey(route.start) &&
-                    !foodTargets.containsValue(route.end)) {
-                doMoveToLocation(foodTargets, route.start, route.end);
-            }
-        }
-
+    private void exploreMapMoves(Ants ants) {
         // explore unseen areas
         Set<Tile> copy = new HashSet<Tile>();
         copy.addAll(unseen);
@@ -115,7 +81,7 @@ public class MyBot extends Bot {
                 }
 
                 for (RouteWithWeight routeWithWeight : routesForAnt) {
-                    if (doMoveToLocation(foodTargets, routeWithWeight.getRoute().getStart(),
+                    if (doMoveToLocation(routeWithWeight.getRoute().getStart(),
                             routeWithWeight.getRoute().getEnd())) {
                         break;
                     }
@@ -124,13 +90,49 @@ public class MyBot extends Bot {
         }
     }
 
+    private void lookAndMoveForFood(Ants ants) {
+        // find close food
+        SortedMap<Integer, Route> distancesToFood = new TreeMap<Integer, Route>();
+        for (Tile foodLoc : ants.getFoodTiles()) {
+            for (Tile antLoc : ants.getMyAnts()) {
+                Integer dist = ants.getDistance(antLoc, foodLoc);
+                distancesToFood.put(dist, new Route(antLoc, foodLoc));
+            }
+        }
 
-    private boolean doMoveInDirection(Tile antLoc, Aim direction) {
+        // move to food
+        for (Route route : distancesToFood.values()) {
+            if (!ants.hasOrderForTile(route.start) &&
+                    !reservedTiles.contains(route.end)) {
+                doMoveToLocation(route.start, route.end);
+            }
+        }
+    }
+
+    private void unblockOwnHill(Ants ants) {
+        // unblock own hill
+        for(Tile hill : ants.getMyHills()) {
+            if (ants.getMyAnts().contains(hill) && !ants.getOrders().contains(hill)) {
+                for (Direction direction : Direction.values()) {
+                    if (doMoveInDirection(hill, direction)) {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private void preventSteppingOnOwnHill(Ants ants) {
+        // prevent stepping on own hill
+        reservedTiles.addAll(ants.getMyHills());
+    }
+
+    private boolean doMoveInDirection(Tile antLoc, Direction direction) {
         Ants ants = getAnts();
 
         // Track all moves, prevent collisions
         Tile newLoc = ants.getTile(antLoc, direction);
-        if (ants.getIlk(newLoc).isUnoccupied() && !reservedTiles.contains(newLoc)) {
+        if (ants.getTyleType(newLoc).isUnoccupied() && !reservedTiles.contains(newLoc)) {
             ants.issueOrder(antLoc, direction);
             reservedTiles.add(newLoc);
             return true;
@@ -139,14 +141,13 @@ public class MyBot extends Bot {
         }
     }
 
-    private boolean doMoveToLocation(Map<Tile, Tile> movingTargets, Tile antLoc, Tile destLoc) {
+    private boolean doMoveToLocation(Tile antLoc, Tile destLoc) {
         Ants ants = getAnts();
 
         // Track targets to prevent 2 ants to the same location
-        List<Aim> directions = ants.getDirections(antLoc, destLoc);
-        for (Aim direction : directions) {
+        List<Direction> directions = ants.getDirections(antLoc, destLoc);
+        for (Direction direction : directions) {
             if (this.doMoveInDirection(antLoc, direction)) {
-                movingTargets.put(antLoc, destLoc);
                 return true;
             }
         }

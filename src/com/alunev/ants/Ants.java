@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.alunev.ants.mechanics.Aim;
+import com.alunev.ants.mechanics.Direction;
 import com.alunev.ants.mechanics.Order;
 import com.alunev.ants.mechanics.Tile;
 import com.alunev.ants.mechanics.TileType;
@@ -176,7 +176,7 @@ public class Ants {
      *
      * @return ilk at the <cod>tile</code>
      */
-    public TileType getIlk(Tile tile) {
+    public TileType getTyleType(Tile tile) {
         return map[tile.getRow()][tile.getCol()];
     }
 
@@ -186,8 +186,8 @@ public class Ants {
      * @param tile location on the game map
      * @param ilk ilk to be set at <code>tile</code>
      */
-    public void setIlk(Tile tile, TileType ilk) {
-        map[tile.getRow()][tile.getCol()] = ilk;
+    public void setTileType(Tile tile, TileType type) {
+        map[tile.getRow()][tile.getCol()] = type;
     }
 
     /**
@@ -198,7 +198,7 @@ public class Ants {
      *
      * @return ilk at the location in <code>direction</code> from <cod>tile</code>
      */
-    public TileType getIlk(Tile tile, Aim direction) {
+    public TileType getIlk(Tile tile, Direction direction) {
         Tile newTile = getTile(tile, direction);
         return map[newTile.getRow()][newTile.getCol()];
     }
@@ -211,7 +211,7 @@ public class Ants {
      *
      * @return location in <code>direction</code> from <cod>tile</code>
      */
-    public Tile getTile(Tile tile, Aim direction) {
+    public Tile getTile(Tile tile, Direction direction) {
         int row = (tile.getRow() + direction.getRowDelta()) % rows;
         if (row < 0) {
             row += rows;
@@ -301,32 +301,32 @@ public class Ants {
      *
      * @return orthogonal directions from <code>t1</code> to <code>t2</code>
      */
-    public List<Aim> getDirections(Tile t1, Tile t2) {
-        List<Aim> directions = new ArrayList<Aim>();
+    public List<Direction> getDirections(Tile t1, Tile t2) {
+        List<Direction> directions = new ArrayList<Direction>();
         if (t1.getRow() < t2.getRow()) {
             if (t2.getRow() - t1.getRow() >= rows / 2) {
-                directions.add(Aim.NORTH);
+                directions.add(Direction.NORTH);
             } else {
-                directions.add(Aim.SOUTH);
+                directions.add(Direction.SOUTH);
             }
         } else if (t1.getRow() > t2.getRow()) {
             if (t1.getRow() - t2.getRow() >= rows / 2) {
-                directions.add(Aim.SOUTH);
+                directions.add(Direction.SOUTH);
             } else {
-                directions.add(Aim.NORTH);
+                directions.add(Direction.NORTH);
             }
         }
         if (t1.getCol() < t2.getCol()) {
             if (t2.getCol() - t1.getCol() >= cols / 2) {
-                directions.add(Aim.WEST);
+                directions.add(Direction.WEST);
             } else {
-                directions.add(Aim.EAST);
+                directions.add(Direction.EAST);
             }
         } else if (t1.getCol() > t2.getCol()) {
             if (t1.getCol() - t2.getCol() >= cols / 2) {
-                directions.add(Aim.EAST);
+                directions.add(Direction.EAST);
             } else {
-                directions.add(Aim.WEST);
+                directions.add(Direction.WEST);
             }
         }
         return directions;
@@ -406,7 +406,7 @@ public class Ants {
      * @param myAnt map tile with my ant
      * @param direction direction in which to move my ant
      */
-    public void issueOrder(Tile myAnt, Aim direction) {
+    public void issueOrder(Tile myAnt, Direction direction) {
         Order order = new Order(myAnt, direction);
         orders.add(order);
         System.out.println(order);
