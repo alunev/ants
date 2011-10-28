@@ -3,12 +3,12 @@ package com.alunev.ants.logic;
 import com.alunev.ants.Ants;
 import com.alunev.ants.mechanics.Tile;
 
-public class Route {
+public class LinearRoute {
     public final Tile start;
     public final Tile end;
     public static final int MAX_MAP_SIZE_2 = Ants.MAX_MAP_SIZE * Ants.MAX_MAP_SIZE;
 
-    public Route(Tile start, Tile end) {
+    public LinearRoute(Tile start, Tile end) {
         this.start = start;
         this.end = end;
     }
@@ -41,7 +41,7 @@ public class Route {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        Route other = (Route) obj;
+        LinearRoute other = (LinearRoute) obj;
         if (end == null) {
             if (other.end != null)
                 return false;

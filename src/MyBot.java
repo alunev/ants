@@ -9,8 +9,9 @@ import java.util.TreeSet;
 
 import com.alunev.ants.Ants;
 import com.alunev.ants.bot.Bot;
-import com.alunev.ants.logic.Route;
-import com.alunev.ants.logic.RouteWithWeight;
+import com.alunev.ants.logic.LinearRoute;
+import com.alunev.ants.logic.PathFinder;
+import com.alunev.ants.logic.RouteWithSimpleDistanceWeight;
 import com.alunev.ants.mechanics.Direction;
 import com.alunev.ants.mechanics.Tile;
 
@@ -75,12 +76,12 @@ public class MyBot extends Bot {
 
         for (Tile myAnt : ants.getMyAnts()) {
             if (!ants.hasOrderForTile(myAnt)) {
-                SortedSet<RouteWithWeight> routesForAnt = new TreeSet<RouteWithWeight>();
+                SortedSet<RouteWithSimpleDistanceWeight> routesForAnt = new TreeSet<RouteWithSimpleDistanceWeight>();
                 for (Tile unseenTile : unseen) {
-                    routesForAnt.add(new RouteWithWeight(getAnts(), new Route(myAnt, unseenTile)));
+                    routesForAnt.add(new RouteWithSimpleDistanceWeight(getAnts(), new LinearRoute(myAnt, unseenTile)));
                 }
 
-                for (RouteWithWeight routeWithWeight : routesForAnt) {
+                for (RouteWithSimpleDistanceWeight routeWithWeight : routesForAnt) {
                     if (doMoveToLocation(routeWithWeight.getRoute().getStart(),
                             routeWithWeight.getRoute().getEnd())) {
                         break;
@@ -92,19 +93,22 @@ public class MyBot extends Bot {
 
     private void lookAndMoveForFood(Ants ants) {
         // find close food
-        SortedMap<Integer, Route> distancesToFood = new TreeMap<Integer, Route>();
+        SortedMap<Integer, LinearRoute> distancesToFood = new TreeMap<Integer, LinearRoute>();
         for (Tile foodLoc : ants.getFoodTiles()) {
             for (Tile antLoc : ants.getMyAnts()) {
                 Integer dist = ants.getDistance(antLoc, foodLoc);
-                distancesToFood.put(dist, new Route(antLoc, foodLoc));
+                distancesToFood.put(dist, new LinearRoute(antLoc, foodLoc));
             }
         }
 
-        // move to food
-        for (Route route : distancesToFood.values()) {
+        // move to food[63 28, 64 28, 64 29, 65 29, 66 29, 66 28, 67 28, 67 29, 68 29, 68 28, 68 27, 69 27, 70 27, 71 27, 72 27, 72 26, 72 25, 71 25, 70 25, 69 25, 69 24, 68 24, 67 24, 66 24, 65 24, 64 24, 64 23, 63 23, 62 23]
+        for (LinearRoute route : distancesToFood.values()) {
             if (!ants.hasOrderForTile(route.start) &&
                     !reservedTiles.contains(route.end)) {
-                doMoveToLocation(route.start, route.end);
+                List<Tile> list = new PathFinder(getAnts(), route.start, route.end).getAStarPath();
+                if (list.size() > 1) {
+                    doMoveToLocation(route.start, list.get(1));
+                }
             }
         }
     }

@@ -2,16 +2,16 @@ package com.alunev.ants.logic;
 
 import com.alunev.ants.Ants;
 
-public class RouteWithWeight implements Comparable<RouteWithWeight>{
-    private Route route;
+public class RouteWithSimpleDistanceWeight implements Comparable<RouteWithSimpleDistanceWeight>{
+    private LinearRoute route;
     private int weight;
 
-    public RouteWithWeight(Ants ants, Route route) {
+    public RouteWithSimpleDistanceWeight(Ants ants, LinearRoute route) {
         this.route = route;
         this.weight = ants.getDistance(route.getStart(), route.getEnd());
     }
 
-    public Route getRoute() {
+    public LinearRoute getRoute() {
         return route;
     }
 
@@ -36,7 +36,7 @@ public class RouteWithWeight implements Comparable<RouteWithWeight>{
             return false;
         if (getClass() != obj.getClass())
             return false;
-        RouteWithWeight other = (RouteWithWeight) obj;
+        RouteWithSimpleDistanceWeight other = (RouteWithSimpleDistanceWeight) obj;
         if (route == null) {
             if (other.route != null)
                 return false;
@@ -48,7 +48,7 @@ public class RouteWithWeight implements Comparable<RouteWithWeight>{
     }
 
     @Override
-    public int compareTo(RouteWithWeight o) {
+    public int compareTo(RouteWithSimpleDistanceWeight o) {
         return this.weight - o.weight;
     }
 }

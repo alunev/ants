@@ -5,7 +5,7 @@ rm build/classes/*.class
 rm dist/MyBot.zip
 
 # compile
-javac -d build/classes -cp src src/*.java
+javac -verbose -d build/classes -cp src src/*.java
 
 # package
 jar -cvmf Manifest.txt dist/MyBot.jar -C build/classes .
