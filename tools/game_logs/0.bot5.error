@@ -1,0 +1,12 @@
+turn  189 bot 5 invalid actions:
+o 33 72 n # not player ant
+turn  190 bot 5 invalid actions:
+o 32 72 w # not player ant
+turn  354 bot 5 invalid actions:
+o 44 83 s # not player ant
+turn  355 bot 5 invalid actions:
+o 45 83 e # not player ant
+turn  356 bot 5 invalid actions:
+o 45 84 s # not player ant
+turn  357 bot 5 invalid actions:
+o 46 84 s # not player ant
