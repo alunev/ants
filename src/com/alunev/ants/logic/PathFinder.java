@@ -16,6 +16,8 @@ import com.alunev.ants.mechanics.Tile;
 
 public class PathFinder {
     private Ants ants;
+    private PathEstimator pathEstimator;
+
     private Set<Tile> reservedTiles = new HashSet<Tile>();
     private WeightedTile start;
     private WeightedTile goal;
@@ -27,10 +29,11 @@ public class PathFinder {
 
     private Map<WeightedTile, Integer> gScores = new HashMap<WeightedTile, Integer>();
 
-    public PathFinder(Ants ants, Tile start, Tile goal) {
+    public PathFinder(Ants ants, Tile start, Tile goal, PathEstimator pathEstimator) {
         this.ants = ants;
         this.start = new WeightedTile(start, 0);
         this.goal = new WeightedTile(goal, 0);
+        this.pathEstimator = pathEstimator;
     }
 
     public List<Tile> getAStarPath(TurnTimer turnTimer) {
@@ -42,7 +45,7 @@ public class PathFinder {
             WeightedTile x = nodesToEvaluate.first();
 
             // we can't step on food, so check if we are near it already
-            if (gotCloseEnoughToFood(x) || turnTimer.giveUp()) {
+            if (pathEstimator.gotCloseEnough(x, goal) || turnTimer.giveUp()) {
                 return buildPathFormStartToHere(x);
             }
 
@@ -76,10 +79,6 @@ public class PathFinder {
         }
 
         return Collections.emptyList();
-    }
-
-    private boolean gotCloseEnoughToFood(WeightedTile tile) {
-        return ants.getDistance(tile.getTile(), goal.getTile()) <= 1;
     }
 
     private List<Tile> buildPathFormStartToHere(WeightedTile current) {

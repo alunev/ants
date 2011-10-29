@@ -1,12 +1,10 @@
 package com.alunev.ants.logic;
 
-import com.alunev.ants.Ants;
 import com.alunev.ants.mechanics.Tile;
 
 public class LinearRoute {
-    public final Tile start;
-    public final Tile end;
-    public static final int MAX_MAP_SIZE_2 = Ants.MAX_MAP_SIZE * Ants.MAX_MAP_SIZE;
+    private final Tile start;
+    private final Tile end;
 
     public LinearRoute(Tile start, Tile end) {
         this.start = start;
