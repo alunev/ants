@@ -33,7 +33,7 @@ public class PathFinder {
         this.goal = new WeightedTile(goal, 0);
     }
 
-    public List<Tile> getAStarPath() {
+    public List<Tile> getAStarPath(TurnTimer turnTimer) {
         gScores.put(start, 0);
 
         start.setWeight(fScore(start));
@@ -42,8 +42,8 @@ public class PathFinder {
             WeightedTile x = nodesToEvaluate.first();
 
             // we can't step on food, so check if we are near it already
-            if (gotCloseEnoughToFood(x)) {
-                return buildPathFormStartToGoal(x);
+            if (gotCloseEnoughToFood(x) || turnTimer.giveUp()) {
+                return buildPathFormStartToHere(x);
             }
 
             nodesToEvaluate.remove(x);
@@ -82,11 +82,11 @@ public class PathFinder {
         return ants.getDistance(tile.getTile(), goal.getTile()) <= 1;
     }
 
-    private List<Tile> buildPathFormStartToGoal(WeightedTile current) {
+    private List<Tile> buildPathFormStartToHere(WeightedTile current) {
         List<Tile> path = new ArrayList<Tile>();
 
         if (cameFrom.get(current) != null) {
-            path.addAll(buildPathFormStartToGoal(cameFrom.get(current)));
+            path.addAll(buildPathFormStartToHere(cameFrom.get(current)));
         }
 
         path.add(current.getTile());

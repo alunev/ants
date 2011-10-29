@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.alunev.ants.mechanics.DiagDirection;
 import com.alunev.ants.mechanics.Direction;
 import com.alunev.ants.mechanics.Order;
 import com.alunev.ants.mechanics.Tile;
@@ -17,6 +18,11 @@ import com.alunev.ants.mechanics.TileType;
 public class Ants {
     /** Maximum map size. */
     public static final int MAX_MAP_SIZE = 256;
+
+    private static final double TURN_TIME_EPSILON = 0.02;
+    private static final int TURN_TIME_EPSILON_ABS = 50;
+
+    private final boolean DEBUG;
 
     private final int loadTime;
 
@@ -77,6 +83,13 @@ public class Ants {
         for (TileType[] row : map) {
             Arrays.fill(row, TileType.LAND);
         }
+
+        String debugProp = System.getProperty("DEBUG");
+        if (debugProp != null) {
+            this.DEBUG = true;
+        } else {
+            this.DEBUG = false;
+        }
     }
 
     /**
@@ -95,6 +108,11 @@ public class Ants {
      */
     public int getTurnTime() {
         return turnTime;
+    }
+
+    public long getEpsilon() {
+        // return Math.round(turnTime * TURN_TIME_EPSILON + 1);
+        return TURN_TIME_EPSILON_ABS;
     }
 
     /**
@@ -212,11 +230,19 @@ public class Ants {
      * @return location in <code>direction</code> from <cod>tile</code>
      */
     public Tile getTile(Tile tile, Direction direction) {
-        int row = (tile.getRow() + direction.getRowDelta()) % rows;
+        return getTile(tile, direction.getRowDelta(), direction.getColDelta());
+    }
+
+    public Tile getDiagTile(Tile tile, DiagDirection direction) {
+        return getTile(tile, direction.getRowDelta(), direction.getColDelta());
+    }
+
+    public Tile getTile(Tile tile, int rowDelta, int colDelta) {
+        int row = (tile.getRow() + rowDelta) % rows;
         if (row < 0) {
             row += rows;
         }
-        int col = (tile.getCol() + direction.getColDelta()) % cols;
+        int col = (tile.getCol() + colDelta) % cols;
         if (col < 0) {
             col += cols;
         }
@@ -288,8 +314,10 @@ public class Ants {
     public int getDistance(Tile t1, Tile t2) {
         int rowDelta = Math.abs(t1.getRow() - t2.getRow());
         int colDelta = Math.abs(t1.getCol() - t2.getCol());
+
         rowDelta = Math.min(rowDelta, rows - rowDelta);
         colDelta = Math.min(colDelta, cols - colDelta);
+
         return rowDelta * rowDelta + colDelta * colDelta;
     }
 
