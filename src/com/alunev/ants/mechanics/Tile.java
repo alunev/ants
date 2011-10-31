@@ -1,17 +1,16 @@
 package com.alunev.ants.mechanics;
-import com.alunev.ants.Ants;
 
 /**
  * Represents a tile of the game map.
  */
 public class Tile {
     private final int row;
-    
+
     private final int col;
-    
+
     /**
      * Creates new {@link Tile} object.
-     * 
+     *
      * @param row row index
      * @param col column index
      */
@@ -19,46 +18,50 @@ public class Tile {
         this.row = row;
         this.col = col;
     }
-    
+
     /**
      * Returns row index.
-     * 
+     *
      * @return row index
      */
     public int getRow() {
         return row;
     }
-    
+
     /**
      * Returns column index.
-     * 
+     *
      * @return column index
      */
     public int getCol() {
         return col;
     }
-    
-    /**
-     * {@inheritDoc}
-     */
+
     @Override
     public int hashCode() {
-        return row * Ants.MAX_MAP_SIZE + col;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean equals(Object o) {
-        boolean result = false;
-        if (o instanceof Tile) {
-            Tile tile = (Tile)o;
-            result = row == tile.row && col == tile.col;
-        }
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + col;
+        result = prime * result + row;
         return result;
     }
-    
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Tile other = (Tile) obj;
+        if (col != other.col)
+            return false;
+        if (row != other.row)
+            return false;
+        return true;
+    }
+
     /**
      * {@inheritDoc}
      */

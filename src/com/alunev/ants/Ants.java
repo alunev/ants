@@ -453,6 +453,10 @@ public class Ants {
         return visible;
     }
 
+    public boolean isVisibleForAnt(Tile myAnt, Tile tile) {
+        return getDistance(myAnt, tile) <  getViewRadius2();
+    }
+
     public boolean hasOrderForTile(Tile tile) {
         boolean hasOrder = false;
         for (Order order : getOrders()) {

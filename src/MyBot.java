@@ -1,6 +1,10 @@
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -8,8 +12,11 @@ import java.util.TreeMap;
 import com.alunev.ants.Ants;
 import com.alunev.ants.bot.Bot;
 import com.alunev.ants.logic.LinearRoute;
-import com.alunev.ants.logic.PathFinder;
 import com.alunev.ants.logic.TurnTimer;
+import com.alunev.ants.logic.pathfind.FoodEstimator;
+import com.alunev.ants.logic.pathfind.HillEstimator;
+import com.alunev.ants.logic.pathfind.PathFinder;
+import com.alunev.ants.logic.pathfind.PathSpec;
 import com.alunev.ants.mechanics.DiagDirection;
 import com.alunev.ants.mechanics.Direction;
 import com.alunev.ants.mechanics.Tile;
@@ -19,7 +26,9 @@ import com.alunev.ants.mechanics.TileType;
  * Starter bot implementation.
  */
 public class MyBot extends Bot {
-    private static final int ATTACERS_PER_HILL = 2;
+    private static final int UNSEEN_TILES_TO_ANALYZE = 1;
+
+    private int hillAttackRadius;
 
     private Set<Tile> reservedTiles = new HashSet<Tile>();
     private Set<Tile> unseen = new HashSet<Tile>();
@@ -51,6 +60,8 @@ public class MyBot extends Bot {
                 unseen.add(new Tile(i, j));
             }
         }
+
+        this.hillAttackRadius = viewRadius2 * 2;
     }
 
     /**
@@ -67,15 +78,42 @@ public class MyBot extends Bot {
 
         preventSteppingOnOwnHill(ants);
 
-        setupDefense(ants, turnTimer);
-
         unblockOwnHill(ants, turnTimer);
+
+        setupDefense(ants, turnTimer);
 
         lookAndMoveForFood(ants, turnTimer);
 
         attackHills(ants, turnTimer);
 
         exploreMapMoves(ants, turnTimer);
+
+        doRandomMoveAfterAll(ants, turnTimer);
+    }
+
+    private void doRandomMoveAfterAll(Ants ants, TurnTimer turnTimer) {
+        if (turnTimer.giveUp()) {
+            return;
+        }
+
+        Random random = new Random(System.currentTimeMillis());
+        for (Tile tile : getFreeToMoveAnts()) {
+            if (turnTimer.giveUp()) {
+                return;
+            }
+
+            boolean moved = false;
+            int tries = 0;
+            while (!moved && tries++ < 10) {
+                Direction direction = Direction.values()[random.nextInt(4)];
+
+                if (doMoveInDirection(tile, direction)) {
+                    moved = true;
+                }
+
+                tries++;
+            }
+        }
     }
 
     private void attackHills(Ants ants, TurnTimer turnTimer) {
@@ -90,42 +128,44 @@ public class MyBot extends Bot {
             }
         }
 
-        for (Tile hillLoc : seenEnemyHills) {
+        // form list of hills for each ant
+        Map<Tile, List<Tile>> antToGoals = new HashMap<Tile, List<Tile>>();
+        for (Tile enemyHill : seenEnemyHills) {
             if (turnTimer.giveUp()) {
                 return;
             }
 
-            // find closest ants for this hill
-            SortedMap<Integer, LinearRoute> routesToHill = new TreeMap<Integer, LinearRoute>();
-            for (Tile antLoc : getFreeToMoveAnts()) {
-                if (!ants.hasOrderForTile(antLoc) && !reservedTiles.contains(hillLoc)) {
-                    Integer dist = ants.getDistance(antLoc, hillLoc);
-                    routesToHill.put(dist, new LinearRoute(antLoc, hillLoc));
+            for (Tile myAnt : getFreeToMoveAnts()) {
+                if (ants.getDistance(myAnt, enemyHill) < hillAttackRadius) {
+                    if (!antToGoals.containsKey(myAnt)) {
+                        antToGoals.put(myAnt, new ArrayList<Tile>());
+                    }
+
+                    antToGoals.get(myAnt).add(enemyHill);
                 }
             }
+        }
 
-            // attack hill
-            int attackers = 0;
-            for (LinearRoute route : routesToHill.values()) {
-                if (ants.hasOrderForTile(route.getStart())
-                        || targetTiles.contains(route.getEnd())
-                        || reservedTiles.contains(route.getEnd())) {
-                    continue;
-                }
+        for (Map.Entry<Tile, List<Tile>> entry: antToGoals.entrySet()) {
+            Tile myAnt = entry.getKey();
+            List<Tile> goals = entry.getValue();
 
-                if (turnTimer.giveUp()) {
-                    return;
-                }
+            // filter routes so that they don't overlap with other ants/destinations
+            goals = filterGoals(goals);
+            if (goals.isEmpty()) {
+                continue;
+            }
 
-                List<Tile> list = new PathFinder(getAnts(), route.getStart(), route.getEnd()).getAStarPath(turnTimer);
-                if (list.size() > 1 && reservedTiles.contains(route.getEnd())) {
-                    doMoveToLocation(route.getStart(), list.get(1));
-                    targetTiles.add(route.getEnd());
+            if (turnTimer.giveUp()) {
+                return;
+            }
 
-                    if (attackers++ >= ATTACERS_PER_HILL) {
-                        break;
-                    }
-                }
+            PathSpec pathSpec = new PathFinder(getAnts(),
+                    myAnt, goals,
+                    new HillEstimator()).getAStarPath(turnTimer);
+            if (pathSpec.getPath().size() > 1) {
+                doMoveToLocation(myAnt, pathSpec.getPath().get(1));
+                targetTiles.add(pathSpec.getGoal());
             }
         }
     }
@@ -153,18 +193,35 @@ public class MyBot extends Bot {
                 return;
             }
 
+            // find closest unseen tiles
             SortedMap<Integer, LinearRoute> routesForAnt = new TreeMap<Integer, LinearRoute>();
             for (Tile unseenTile : unseen) {
-                routesForAnt.put(ants.getDistance(myAnt, unseenTile),
-                        new LinearRoute(myAnt, unseenTile));
+                if (ants.getTyleType(unseenTile).isUnoccupied()) {
+                    routesForAnt.put(ants.getDistance(myAnt, unseenTile),
+                            new LinearRoute(myAnt, unseenTile));
+                }
             }
 
-            LinearRoute closestRoute = routesForAnt.get(routesForAnt.firstKey());
-            List<Tile> list = new PathFinder(getAnts(), closestRoute.getStart(), closestRoute.getEnd())
-                    .getAStarPath(turnTimer);
-            if (list.size() > 1 && !reservedTiles.contains(list.get(1))) {
-                doMoveToLocation(closestRoute.getStart(), list.get(1));
-                targetTiles.add(closestRoute.getEnd());
+            // form list of goals(we can't afford computing astar for each unseen tile)
+            List<Tile> goals = new ArrayList<Tile>();
+            for (LinearRoute route : routesForAnt.values()) {
+                if (goals.size() >= UNSEEN_TILES_TO_ANALYZE) {
+                    break;
+                }
+
+                goals.add(route.getEnd());
+            }
+
+            goals = filterGoals(goals);
+            if (goals.isEmpty()) {
+                continue;
+            }
+
+            PathSpec pathSpec = new PathFinder(getAnts(), myAnt, goals,
+                    new HillEstimator()).getAStarPath(turnTimer);
+            if (pathSpec.getPath().size() > 1 && !reservedTiles.contains(pathSpec.getPath().get(1))) {
+                doMoveToLocation(myAnt, pathSpec.getPath().get(1));
+                targetTiles.add(pathSpec.getGoal());
             }
         }
     }
@@ -175,23 +232,30 @@ public class MyBot extends Bot {
         }
 
         // find close food
-        SortedMap<Integer, LinearRoute> distancesToFood = new TreeMap<Integer, LinearRoute>();
+        Map<Tile, List<Tile>> antToGoals = new HashMap<Tile, List<Tile>>();
         for (Tile foodLoc : ants.getFoodTiles()) {
             if (turnTimer.giveUp()) {
                 return;
             }
 
-            for (Tile antLoc : getFreeToMoveAnts()) {
-                Integer dist = ants.getDistance(antLoc, foodLoc);
-                distancesToFood.put(dist, new LinearRoute(antLoc, foodLoc));
+            for (Tile myAnt : getFreeToMoveAnts()) {
+                // if (ants.isVisibleForAnt(myAnt, foodLoc)) {
+                    if (!antToGoals.containsKey(myAnt)) {
+                        antToGoals.put(myAnt, new ArrayList<Tile>());
+                    }
+
+                    antToGoals.get(myAnt).add(foodLoc);
+                // }
             }
         }
 
-        // move to food
-        for (LinearRoute route : distancesToFood.values()) {
-            if (ants.hasOrderForTile(route.getStart())
-                    || targetTiles.contains(route.getEnd())
-                    || reservedTiles.contains(route.getEnd())) {
+        // examine each ant move to closest food
+        for (Map.Entry<Tile, List<Tile>> entry: antToGoals.entrySet()) {
+            Tile myAnt = entry.getKey();
+            List<Tile> goals = entry.getValue();
+
+            goals = filterGoals(goals);
+            if (goals.isEmpty()) {
                 continue;
             }
 
@@ -199,12 +263,27 @@ public class MyBot extends Bot {
                 return;
             }
 
-            List<Tile> list = new PathFinder(getAnts(), route.getStart(), route.getEnd()).getAStarPath(turnTimer);
-            if (list.size() > 1) {
-                doMoveToLocation(route.getStart(), list.get(1));
-                targetTiles.add(route.getEnd());
+            PathSpec pathSpec = new PathFinder(getAnts(),
+                    myAnt, goals,
+                    new FoodEstimator(ants)).getAStarPath(turnTimer);
+            if (pathSpec.getPath().size() > 1) {
+                doMoveToLocation(myAnt, pathSpec.getPath().get(1));
+                targetTiles.add(pathSpec.getGoal());
             }
         }
+    }
+
+
+    private List<Tile> filterGoals(List<Tile> goals) {
+        // filter routes
+        List<Tile> filteredGoals = new ArrayList<Tile>(goals.size());
+        for (Tile goal : goals) {
+            if (!targetTiles.contains(goal)
+                    && !reservedTiles.contains(goal)) {
+                filteredGoals.add(goal);
+            }
+        }
+        return filteredGoals;
     }
 
     private void unblockOwnHill(Ants ants, TurnTimer turnTimer) {
