@@ -10,16 +10,14 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import com.alunev.ants.Ants;
-import com.alunev.ants.logic.TurnTimer;
+import com.alunev.ants.calculation.CalcState;
 import com.alunev.ants.mechanics.Direction;
 import com.alunev.ants.mechanics.Tile;
 
 public class PathFinder {
-    private Ants ants;
+    private final CalcState calcState;
     private PathEstimator pathEstimator;
 
-    private Set<Tile> reservedTiles = new HashSet<Tile>();
     private Tile start;
     private List<Tile> goals;
 
@@ -30,25 +28,24 @@ public class PathFinder {
 
     private Map<Tile, Integer> gScores = new HashMap<Tile, Integer>();
 
-    public PathFinder(Ants ants, Tile start, List<Tile> goals, PathEstimator pathEstimator) {
-        this.ants = ants;
+    public PathFinder(CalcState calcState, Tile start,
+            List<Tile> goals, PathEstimator pathEstimator) {
+        this.calcState = calcState;
         this.start = start;
-
         this.goals = goals;
-
         this.pathEstimator = pathEstimator;
     }
 
-    public PathSpec getAStarPath(TurnTimer turnTimer) {
+    public PathSpec getAStarPath() {
         List<Tile> currentPath;
         PathSpec shortestPathSpec = null;
 
         for (Tile goal : goals) {
-            if (turnTimer.giveUp()) {
+            if (calcState.giveUp()) {
                 break;
             }
 
-            currentPath = getAStarPathForGoal(turnTimer, goal);
+            currentPath = getAStarPathForGoal(goal);
             if (shortestPathSpec == null || currentPath.size() < shortestPathSpec.getPath().size()) {
                 shortestPathSpec = new PathSpec(goal, currentPath);
             }
@@ -57,7 +54,7 @@ public class PathFinder {
         return shortestPathSpec;
     }
 
-    public List<Tile> getAStarPathForGoal(TurnTimer turnTimer, Tile goal) {
+    public List<Tile> getAStarPathForGoal(Tile goal) {
         gScores.put(start, 0);
 
         nodesToEvaluate.put(start, fScore(start, goal));
@@ -68,7 +65,7 @@ public class PathFinder {
             Tile x = sortedMap.firstKey();
 
             // we can't step on food, so check if we are near it already
-            if (pathEstimator.gotCloseEnough(x, goal) || turnTimer.giveUp()) {
+            if (pathEstimator.gotCloseEnough(x, goal) || calcState.giveUp()) {
                 return buildPathFormStartToHere(x);
             }
 
@@ -91,9 +88,11 @@ public class PathFinder {
                 }
 
                 if (tentativeIsBetter) {
-                    gScores.put(neighbor, tentativeGScore);
-                    nodesToEvaluate.put(neighbor, fScore(neighbor, goal));
                     cameFrom.put(neighbor, x);
+                    gScores.put(neighbor, tentativeGScore);
+                    if (nodesToEvaluate.containsKey(neighbor)) {
+                        nodesToEvaluate.put(neighbor, fScore(neighbor, goal));
+                    }
                 }
             }
         }
@@ -130,7 +129,7 @@ public class PathFinder {
     }
 
     private int hFunction(Tile tile, Tile goal) {
-        return ants.getDistance(tile, goal);
+        return calcState.getDistance(tile, goal);
     }
 
     private Set<Tile> getNeighbors(Tile tile) {
@@ -139,10 +138,10 @@ public class PathFinder {
         Tile potentialNeighbor;
         for (Direction direction : Direction.values()) {
             if (direction != Direction.NONE) {
-                potentialNeighbor = ants.getTile(tile, direction);
+                potentialNeighbor = calcState.getTile(tile, direction);
 
-                if (ants.getTyleType(potentialNeighbor).isUnoccupied()
-                        && !reservedTiles.contains(potentialNeighbor)) {
+                if (calcState.getTyleType(potentialNeighbor).isUnoccupied()
+                        && !calcState.isResered(potentialNeighbor)) {
                     neighbors.add(potentialNeighbor);
                     childToParent.put(potentialNeighbor, tile);
                 }
