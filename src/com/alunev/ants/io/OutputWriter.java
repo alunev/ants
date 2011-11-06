@@ -19,4 +19,9 @@ public class OutputWriter {
         }
         outputStream.flush();
     }
+
+    public void writeCommand(String string) {
+        outputStream.println(string);
+        outputStream.flush();
+    }
 }

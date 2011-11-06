@@ -37,9 +37,11 @@ public class AstarBot implements Bot {
     }
 
     @Override
-    public void beforeStart(GameSetup gameSetup) {
+    public String beforeStart(GameSetup gameSetup) {
         this.calcState = new CalcState(gameSetup);
         this.hillAttackRadius = gameSetup.getViewRadius2() * 2;
+
+        return "go";
     }
 
     @Override
@@ -67,8 +69,8 @@ public class AstarBot implements Bot {
     }
 
     @Override
-    public void afterUpdate() {
-
+    public String afterUpdate() {
+        return "go";
     }
 
     private void doRandomMoveAfterAll() {

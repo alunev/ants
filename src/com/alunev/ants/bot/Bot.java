@@ -7,11 +7,11 @@ import com.alunev.ants.io.GameState;
 import com.alunev.ants.mechanics.Order;
 
 public interface Bot {
-    void beforeStart(GameSetup gameSetup);
+    String beforeStart(GameSetup gameSetup);
 
     void beforeUpdate(GameState gameState);
 
-    void afterUpdate();
-
     List<Order> doTurn();
+
+    String afterUpdate();
 }

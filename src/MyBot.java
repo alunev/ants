@@ -29,7 +29,7 @@ public class MyBot {
         GameSetup gameSetup = inputParser.parseSetup(inputReader.readGameSetup());
 
         Bot astarBot = new AstarBot();
-        astarBot.beforeStart(gameSetup);
+        outputWriter.writeCommand(astarBot.beforeStart(gameSetup));
 
         List<String> batch = null;
         GameState gameState = new GameState(gameSetup.getRows(), gameSetup.getCols());
@@ -38,7 +38,7 @@ public class MyBot {
 
             astarBot.beforeUpdate(gameState);
             outputWriter.writeOrders(astarBot.doTurn());
-            astarBot.afterUpdate();
+            outputWriter.writeCommand(astarBot.afterUpdate());
         }
     }
 }
