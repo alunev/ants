@@ -171,16 +171,6 @@ public class CalcState {
         return new Tile(row, col);
     }
 
-    public int getDistance(Tile t1, Tile t2) {
-        int rowDelta = Math.abs(t1.getRow() - t2.getRow());
-        int colDelta = Math.abs(t1.getCol() - t2.getCol());
-
-        rowDelta = Math.min(rowDelta, gameSetup.getRows() - rowDelta);
-        colDelta = Math.min(colDelta, gameSetup.getCols() - colDelta);
-
-        return rowDelta * rowDelta + colDelta * colDelta;
-    }
-
     /**
      * Returns one or two orthogonal directions from one location to the another.
      *
@@ -223,19 +213,11 @@ public class CalcState {
     }
 
     public boolean isVisible(Tile tile) {
-        boolean visible = false;
-        for (Tile myAnt : gameState.getMyAnts()) {
-            if (getDistance(myAnt, tile) <  gameSetup.getViewRadius2()) {
-                visible = true;
-                break;
-            }
-        }
-
-        return visible;
+        return new MapUtils(gameSetup).isVisible(tile, gameState.getMyAnts(), gameSetup.getViewRadius2());
     }
 
     public boolean isVisibleForAnt(Tile myAnt, Tile tile) {
-        return getDistance(myAnt, tile) <  gameSetup.getViewRadius2();
+        return new MapUtils(gameSetup).isVisibleForAnt(myAnt, tile);
     }
 
     public Order doMoveInDirection(Tile antLoc, Direction direction) {

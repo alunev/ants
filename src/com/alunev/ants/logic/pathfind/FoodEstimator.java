@@ -1,6 +1,7 @@
 package com.alunev.ants.logic.pathfind;
 
 import com.alunev.ants.calculation.CalcState;
+import com.alunev.ants.calculation.MapUtils;
 import com.alunev.ants.mechanics.Tile;
 
 public class FoodEstimator implements PathEstimator {
@@ -12,6 +13,7 @@ public class FoodEstimator implements PathEstimator {
     }
 
     public boolean gotCloseEnough(Tile tile, Tile goal) {
-        return calcState.getDistance(tile, goal) <= 1;
+        MapUtils mapUtils = new MapUtils(calcState.getGameSetup());
+        return mapUtils.getDistance(tile, goal) <= 1;
     }
 }

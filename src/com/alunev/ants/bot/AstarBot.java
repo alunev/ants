@@ -9,6 +9,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import com.alunev.ants.calculation.CalcState;
+import com.alunev.ants.calculation.MapUtils;
 import com.alunev.ants.io.GameSetup;
 import com.alunev.ants.io.GameState;
 import com.alunev.ants.logic.LinearRoute;
@@ -101,6 +102,8 @@ public class AstarBot implements Bot {
             return;
         }
 
+        MapUtils mapUtils = new MapUtils(calcState.getGameSetup());
+
         // form list of hills for each ant
         Map<Tile, List<Tile>> antToGoals = new HashMap<Tile, List<Tile>>();
         for (Tile enemyHill : calcState.getSeenEnemyHills()) {
@@ -109,7 +112,7 @@ public class AstarBot implements Bot {
             }
 
             for (Tile myAnt : calcState.getFreeToMoveAnts(orders)) {
-                if (calcState.getDistance(myAnt, enemyHill) < hillAttackRadius) {
+                if (mapUtils.getDistance(myAnt, enemyHill) < hillAttackRadius) {
                     if (!antToGoals.containsKey(myAnt)) {
                         antToGoals.put(myAnt, new ArrayList<Tile>());
                     }
@@ -148,6 +151,8 @@ public class AstarBot implements Bot {
             return;
         }
 
+        MapUtils mapUtils = new MapUtils(calcState.getGameSetup());
+
         for (Tile myAnt : calcState.getFreeToMoveAnts(orders)) {
             if (calcState.hasOrderForTile(myAnt, orders)) {
                 continue;
@@ -161,7 +166,7 @@ public class AstarBot implements Bot {
             SortedMap<Integer, LinearRoute> routesForAnt = new TreeMap<Integer, LinearRoute>();
             for (Tile unseenTile : calcState.getUnseenTiles()) {
                 if (calcState.getTyleType(unseenTile).isUnoccupied()) {
-                    routesForAnt.put(calcState.getDistance(myAnt, unseenTile),
+                    routesForAnt.put(mapUtils.getDistance(myAnt, unseenTile),
                             new LinearRoute(myAnt, unseenTile));
                 }
             }
@@ -195,6 +200,8 @@ public class AstarBot implements Bot {
             return;
         }
 
+        MapUtils mapUtils = new MapUtils(calcState.getGameSetup());
+
         // find close food
         Map<Tile, List<Tile>> antToGoals = new HashMap<Tile, List<Tile>>();
         for (Tile foodLoc : calcState.getSeenFood()) {
@@ -204,7 +211,7 @@ public class AstarBot implements Bot {
 
             Map<Tile, Integer> antToDistance = new HashMap<Tile, Integer>();
             for (Tile myAnt : calcState.getFreeToMoveAnts(orders)) {
-                antToDistance.put(myAnt, calcState.getDistance(myAnt, foodLoc));
+                antToDistance.put(myAnt, mapUtils.getDistance(myAnt, foodLoc));
             }
 
             if (!antToDistance.isEmpty()) {

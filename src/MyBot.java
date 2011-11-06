@@ -32,9 +32,9 @@ public class MyBot {
         astarBot.beforeStart(gameSetup);
 
         List<String> batch = null;
-        GameState gameState = null;
+        GameState gameState = new GameState(gameSetup.getRows(), gameSetup.getCols());
         while (!(batch = inputReader.readGameUpdate()).isEmpty()) {
-            gameState = inputParser.parseUpdate(batch, gameSetup.getRows(), gameSetup.getCols());
+            gameState.merge(inputParser.parseUpdate(batch, gameSetup));
 
             astarBot.beforeUpdate(gameState);
             outputWriter.writeOrders(astarBot.doTurn());

@@ -3,6 +3,7 @@ package com.alunev.ants.io;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.alunev.ants.calculation.MapUtils;
 import com.alunev.ants.mechanics.Tile;
 import com.alunev.ants.mechanics.TileType;
 
@@ -19,12 +20,34 @@ public class GameStateBuilder {
 
     private final Set<Tile> foodTiles = new HashSet<Tile>();
 
-    public GameStateBuilder(int rows, int cols) {
-        this.map = new TileType[rows][cols];
+    private final GameSetup gameSetup;
+
+    public GameStateBuilder(GameSetup gameSetup) {
+        this.gameSetup = gameSetup;
+
+        this.map = new TileType[gameSetup.getRows()][gameSetup.getCols()];
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[0].length; j++) {
+                map[i][j] = TileType.UNKNOWN;
+            }
+        }
     }
 
     public GameState build() {
-        GameState gameState = new GameState(map, enemyAnts, enemyAnts, enemyAnts, enemyAnts, enemyAnts);
+        // mark all visible tiles around ant as land if it was not marked otherwise
+        MapUtils mapUtils = new MapUtils(gameSetup);
+        for (int i = 0;i < map.length;i++) {
+            for (int j = 0; j < map[0].length; j++) {
+                if (map[i][j] == TileType.UNKNOWN) {
+                    if (mapUtils.isVisible(new Tile(i,j), myAnts, gameSetup.getViewRadius2())) {
+                        map[i][j] = TileType.LAND;
+                    }
+                }
+            }
+        }
+
+
+        GameState gameState = new GameState(map, myAnts, enemyAnts, myHills, enemyHills, foodTiles);
         return gameState;
     }
 

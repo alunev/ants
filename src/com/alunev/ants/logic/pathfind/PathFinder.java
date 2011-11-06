@@ -11,6 +11,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import com.alunev.ants.calculation.CalcState;
+import com.alunev.ants.calculation.MapUtils;
 import com.alunev.ants.mechanics.Direction;
 import com.alunev.ants.mechanics.Tile;
 
@@ -129,7 +130,8 @@ public class PathFinder {
     }
 
     private int hFunction(Tile tile, Tile goal) {
-        return calcState.getDistance(tile, goal);
+        MapUtils mapUtils = new MapUtils(calcState.getGameSetup());
+        return mapUtils.getDistance(tile, goal);
     }
 
     private Set<Tile> getNeighbors(Tile tile) {

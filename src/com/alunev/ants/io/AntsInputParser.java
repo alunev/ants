@@ -10,7 +10,11 @@ public class AntsInputParser implements InputParser  {
     private static final char COMMENT_CHAR = '#';
 
     private enum SetupToken {
-        LOADTIME, TURNTIME, ROWS, COLS, TURNS, VIEWRADIUS2, ATTACKRADIUS2, SPAWNRADIUS2;
+        LOADTIME, TURNTIME, ROWS, COLS, TURNS, VIEWRADIUS2, ATTACKRADIUS2, SPAWNRADIUS2,
+        PLAYER_SEED,
+        FOOD_RATE,
+        FOOD_TURN,
+        FOOD_START;
 
         private static final Pattern PATTERN = compilePattern(SetupToken.class);
     }
@@ -48,6 +52,10 @@ public class AntsInputParser implements InputParser  {
         int viewRadius2 = 0;
         int attackRadius2 = 0;
         int spawnRadius2 = 0;
+        int playerSeed = 0;
+        int foodRate = 0;
+        int foodTurn = 0;
+        int foodStart = 0;
 
         for (String line : input) {
             line = removeComment(line);
@@ -91,11 +99,14 @@ public class AntsInputParser implements InputParser  {
                 case SPAWNRADIUS2:
                     spawnRadius2 = scanner.nextInt();
                 break;
+                case PLAYER_SEED:
+                    playerSeed = scanner.nextInt();
+                break;
             }
         }
 
         return new GameSetup(loadTime, turnTime, rows, cols, turns, viewRadius2,
-                attackRadius2, spawnRadius2);
+                attackRadius2, spawnRadius2, playerSeed);
     }
 
     /**
@@ -104,8 +115,8 @@ public class AntsInputParser implements InputParser  {
      * @param input update information
      */
     @Override
-    public GameState parseUpdate(List<String> input, int rows, int cols) {
-        GameStateBuilder gameStateBuilder = new GameStateBuilder(rows, cols);
+    public GameState parseUpdate(List<String> input, GameSetup gameSetup) {
+        GameStateBuilder gameStateBuilder = new GameStateBuilder(gameSetup);
 
         for (String line : input) {
             line = removeComment(line);
