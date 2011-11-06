@@ -16,7 +16,7 @@ public class InputReaderTest {
         FileInputStream fis = new FileInputStream("testdata/game_setup.001.txt");
         InputReader inputReader = new InputReader(fis);
 
-        GameSetup gameSetup = new GameSetup(60000000, 6000000, 60, 90, 1000, 55, 5, 1, 42);
+        GameSetup gameSetup = new GameSetup(6000000, 6000000, 5, 5, 1000, 3, 5, 1, 42);
         GameSetup readGameSetup = new AntsInputParser().parseSetup(inputReader.readGameSetup());
 
         assertEquals(gameSetup, readGameSetup);

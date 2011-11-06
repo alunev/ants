@@ -11,6 +11,5 @@ player_seed 42
 ready
 turn 1
 a 0 0 0
-f 4 4
+f 2 2
 go
-

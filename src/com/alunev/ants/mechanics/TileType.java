@@ -3,14 +3,14 @@ package com.alunev.ants.mechanics;
  * Represents type of tile on the game map.
  */
 public enum TileType {
-    /** Water tile. */
-    UNKNOWN,
+    /** Food tile. */
+    FOOD,
 
     /** Water tile. */
     WATER,
 
-    /** Food tile. */
-    FOOD,
+    /** Water tile. */
+    UNKNOWN,
 
     /** Land tile. */
     LAND,

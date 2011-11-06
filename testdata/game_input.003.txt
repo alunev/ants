@@ -4,17 +4,23 @@ turntime 6000000
 rows 20
 cols 20
 turns 1000
-viewradius2 50
+viewradius2 5
 attackradius2 5
 spawnradius2 1
 player_seed 42
 ready
 turn 1
+w 9 12
+w 9 11
+w 9 10
+w 9 9
+w 9 8
+w 10 8
 w 11 8
 w 11 9
 w 11 10
 w 11 11
 w 11 12
-a 8 10 0
-f 12 10
+a 10 9 0
+f 12 8
 go
