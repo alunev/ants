@@ -14,6 +14,6 @@ public class FoodEstimator implements PathEstimator {
 
     public boolean gotCloseEnough(Tile tile, Tile goal) {
         MapUtils mapUtils = new MapUtils(calcState.getGameSetup());
-        return mapUtils.getDistance(tile, goal) <= 1;
+        return mapUtils.getDistance(tile, goal) <= calcState.getGameSetup().getSpawnRadius2();
     }
 }

@@ -34,10 +34,10 @@ public class CalcState {
     private TurnTimer turnTimer;
 
 
-    public CalcState(GameSetup gameSetup, GameState gameState) {
+    public CalcState(GameSetup gameSetup) {
         this.gameSetup = gameSetup;
-        this.gameState = gameState;
         this.unseenTiles = new HashSet<Tile>(gameSetup.getRows() * gameSetup.getCols());
+
         for (int i = 0; i < gameSetup.getRows(); i++) {
             for (int j = 0; j < gameSetup.getCols(); j++) {
                 unseenTiles.add(new Tile(i, j));
@@ -84,6 +84,8 @@ public class CalcState {
     }
 
     public void update(GameState gameState) {
+        this.gameState = gameState;
+
         reservedTiles.clear();
         targetTiles.clear();
 

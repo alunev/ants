@@ -38,7 +38,7 @@ public class AstarBot implements Bot {
 
     @Override
     public void beforeStart(GameSetup gameSetup) {
-        this.calcState = new CalcState(gameSetup, null);
+        this.calcState = new CalcState(gameSetup);
         this.hillAttackRadius = gameSetup.getViewRadius2() * 2;
     }
 
