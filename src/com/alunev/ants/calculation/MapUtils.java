@@ -3,6 +3,8 @@ package com.alunev.ants.calculation;
 import java.util.Set;
 
 import com.alunev.ants.io.GameSetup;
+import com.alunev.ants.mechanics.DiagDirection;
+import com.alunev.ants.mechanics.Direction;
 import com.alunev.ants.mechanics.Tile;
 
 public class MapUtils {
@@ -38,5 +40,25 @@ public class MapUtils {
         colDelta = Math.min(colDelta, gameSetup.getCols() - colDelta);
 
         return rowDelta * rowDelta + colDelta * colDelta;
+    }
+
+    public Tile getTile(Tile tile, Direction direction) {
+        return getTile(tile, direction.getRowDelta(), direction.getColDelta());
+    }
+
+    public Tile getDiagTile(Tile tile, DiagDirection direction) {
+        return getTile(tile, direction.getRowDelta(), direction.getColDelta());
+    }
+
+    public Tile getTile(Tile tile, int rowDelta, int colDelta) {
+        int row = (tile.getRow() + rowDelta) % gameSetup.getRows();
+        if (row < 0) {
+            row += gameSetup.getRows();
+        }
+        int col = (tile.getCol() + colDelta) % gameSetup.getCols();
+        if (col < 0) {
+            col += gameSetup.getCols();
+        }
+        return new Tile(row, col);
     }
 }

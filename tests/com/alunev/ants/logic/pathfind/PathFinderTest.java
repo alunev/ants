@@ -3,9 +3,14 @@ package com.alunev.ants.logic.pathfind;
 import static org.junit.Assert.assertEquals;
 
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import com.alunev.ants.mechanics.Order;
+import com.alunev.ants.mechanics.TileType;
+import com.alunev.ants.simulator.Simulator;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -135,5 +140,41 @@ public class PathFinderTest {
         VisualUtils.printMapWithPath(gameState.getMap(), calculatedPath);
 
         assertEquals(path, calculatedPath);
+    }
+
+    @Test
+    public void testAStarPathRealtime() throws Exception {
+        GameSetup gameSetup = new AntsInputParser().parseSetup(
+                new InputReader(new FileInputStream("testdata/001.game_setup.txt")).readGameSetup());
+        TileType[][] map = VisualUtils.readMap(
+                new FileReader("testdata/001.map.txt"), gameSetup.getRows(), gameSetup.getCols());
+        Simulator simulator = new Simulator(gameSetup, map);
+
+        VisualUtils.printMap(map);
+
+        List<Tile> calculatedPath = new ArrayList<Tile>(1);
+        calculatedPath.add(null);
+        while (calculatedPath.size() > 0) {
+            GameState gameStateUpdate = new AntsInputParser().parseUpdate(simulator.getGameStateStrings(), gameSetup);
+            CalcState calcState = new CalcState(gameSetup);
+            calcState.update(gameStateUpdate);
+
+            List<Tile> goals = new ArrayList<Tile>();
+            for (Tile tile : calcState.getSeenFood()) {
+                goals.add(tile);
+            }
+
+            Tile myAnt = null;
+            for (Tile tile : calcState.getMyAnts()) {
+                myAnt = tile;
+            }
+
+            PathFinder pathFinder = new PathFinder(calcState, myAnt, goals, new FoodEstimator(calcState));
+            calculatedPath = pathFinder.getAStarPath().getPath();
+
+            simulator.processMove(calculatedPath.get(0), calculatedPath.get(1));
+
+            VisualUtils.printMap(simulator.getMap());
+        }
     }
 }

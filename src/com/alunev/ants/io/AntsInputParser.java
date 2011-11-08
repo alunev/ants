@@ -42,7 +42,6 @@ public class AntsInputParser implements InputParser  {
      *
      * @param input setup information
      */
-    @Override
     public GameSetup parseSetup(List<String> input) {
         int loadTime = 0;
         int turnTime = 0;
@@ -114,7 +113,6 @@ public class AntsInputParser implements InputParser  {
      *
      * @param input update information
      */
-    @Override
     public GameState parseUpdate(List<String> input, GameSetup gameSetup) {
         GameStateBuilder gameStateBuilder = new GameStateBuilder(gameSetup);
 

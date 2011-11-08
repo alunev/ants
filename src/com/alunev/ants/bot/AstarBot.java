@@ -36,7 +36,6 @@ public class AstarBot implements Bot {
     public AstarBot() {
     }
 
-    @Override
     public String beforeStart(GameSetup gameSetup) {
         this.calcState = new CalcState(gameSetup);
         this.hillAttackRadius = gameSetup.getViewRadius2() * 2;
@@ -44,12 +43,10 @@ public class AstarBot implements Bot {
         return "go";
     }
 
-    @Override
     public void beforeUpdate(GameState gameState) {
         calcState.update(gameState);
     }
 
-    @Override
     public List<Order> doTurn() {
         orders.clear();
 
@@ -68,7 +65,6 @@ public class AstarBot implements Bot {
         return orders;
     }
 
-    @Override
     public String afterUpdate() {
         return "go";
     }
@@ -96,6 +92,8 @@ public class AstarBot implements Bot {
 
                 tries++;
             }
+
+            orders.add(order);
         }
     }
 
@@ -281,7 +279,7 @@ public class AstarBot implements Bot {
                 }
 
                 for (DiagDirection direction : DiagDirection.values()) {
-                    Tile placeToHold = calcState.getDiagTile(myHill, direction);
+                    Tile placeToHold = new MapUtils(calcState.getGameSetup()).getDiagTile(myHill, direction);
 
                     if (calcState.getTyleType(placeToHold) == TileType.MY_ANT) {
                         calcState.getMotherlandDefenders().add(placeToHold);

@@ -140,7 +140,7 @@ public class PathFinder {
         Tile potentialNeighbor;
         for (Direction direction : Direction.values()) {
             if (direction != Direction.NONE) {
-                potentialNeighbor = calcState.getTile(tile, direction);
+                potentialNeighbor = new MapUtils(calcState.getGameSetup()).getTile(tile, direction);
 
                 if (calcState.getTyleType(potentialNeighbor).isPassable()
                         && !calcState.isResered(potentialNeighbor)) {

@@ -1,0 +1,11 @@
+turn 0
+loadtime 6000000
+turntime 6000000
+rows 20
+cols 20
+turns 1000
+viewradius2 5
+attackradius2 5
+spawnradius2 1
+player_seed 42
+ready

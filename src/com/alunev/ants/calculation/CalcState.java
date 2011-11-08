@@ -15,7 +15,7 @@ import com.alunev.ants.mechanics.Tile;
 import com.alunev.ants.mechanics.TileType;
 
 public class CalcState {
-    private long CALC_TIME_EPSILON = 50;
+    private static final long CALC_TIME_EPSILON = 50;
 
     private final GameSetup gameSetup;
     private GameState gameState;
@@ -90,17 +90,18 @@ public class CalcState {
         targetTiles.clear();
 
         // remove eaten food
+        MapUtils mapUtils = new MapUtils(gameSetup);
         Set<Tile> filteredFood = new HashSet<Tile>();
+        filteredFood.addAll(seenFood);
         for (Tile foodTile : seenFood) {
-            if (getTyleType(foodTile) == TileType.FOOD) {
-                filteredFood.add(foodTile);
+            if (mapUtils.isVisible(foodTile, gameState.getMyAnts(), gameSetup.getViewRadius2())
+                    && getTyleType(foodTile) != TileType.FOOD) {
+                filteredFood.remove(foodTile);
             }
         }
 
         // add new foods
-        for (Tile foodLoc : gameState.getFoodTiles()) {
-            filteredFood.add(foodLoc);
-        }
+        filteredFood.addAll(gameState.getFoodTiles());
 
         this.seenFood = filteredFood;
 
@@ -143,8 +144,8 @@ public class CalcState {
     public boolean hasOrderForTile(Tile tile, List<Order> orders) {
         boolean hasOrder = false;
         for (Order order : orders) {
-            if (order.getRow() == tile.getRow()
-                    && order.getCol() == tile.getCol()) {
+            if (order.getTile().getRow() == tile.getRow()
+                    && order.getTile().getCol() == tile.getCol()) {
                 hasOrder = true;
                 break;
             }
@@ -153,25 +154,7 @@ public class CalcState {
         return hasOrder;
     }
 
-    public Tile getTile(Tile tile, Direction direction) {
-        return getTile(tile, direction.getRowDelta(), direction.getColDelta());
-    }
 
-    public Tile getDiagTile(Tile tile, DiagDirection direction) {
-        return getTile(tile, direction.getRowDelta(), direction.getColDelta());
-    }
-
-    public Tile getTile(Tile tile, int rowDelta, int colDelta) {
-        int row = (tile.getRow() + rowDelta) % gameSetup.getRows();
-        if (row < 0) {
-            row += gameSetup.getRows();
-        }
-        int col = (tile.getCol() + colDelta) % gameSetup.getCols();
-        if (col < 0) {
-            col += gameSetup.getCols();
-        }
-        return new Tile(row, col);
-    }
 
     /**
      * Returns one or two orthogonal directions from one location to the another.
@@ -224,7 +207,7 @@ public class CalcState {
 
     public Order doMoveInDirection(Tile antLoc, Direction direction) {
         // Track all moves, prevent collisions
-        Tile newLoc = getTile(antLoc, direction);
+        Tile newLoc = new MapUtils(gameSetup).getTile(antLoc, direction);
         if (getTyleType(newLoc).isUnoccupied() && !getReservedTiles().contains(newLoc)) {
             getReservedTiles().add(newLoc);
             return new Order(antLoc, direction);
@@ -236,10 +219,14 @@ public class CalcState {
     public Order doMoveToLocation(Tile antLoc, Tile destLoc) {
         // Track targets to prevent 2 ants to the same location
         List<Direction> directions = getDirections(antLoc, destLoc);
+        Order order = null;
         for (Direction direction : directions) {
-            return doMoveInDirection(antLoc, direction);
+            if ((order = doMoveInDirection(antLoc, direction)) != null) {
+                break;
+            }
         }
-        return null;
+
+        return order;
     }
 
     public List<Tile> filterGoals(List<Tile> goals) {
