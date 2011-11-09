@@ -44,9 +44,6 @@ public class Order {
 
     @Override
     public String toString() {
-        return "Order{" +
-                "tile=" + tile +
-                ", direction=" + direction +
-                '}';
+        return "o " + tile.getRow() + " " + tile.getCol() + " " + direction.getSymbol();
     }
 }
