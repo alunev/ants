@@ -8,7 +8,6 @@ import java.util.Set;
 import com.alunev.ants.io.GameSetup;
 import com.alunev.ants.io.GameState;
 import com.alunev.ants.logic.TurnTimer;
-import com.alunev.ants.mechanics.DiagDirection;
 import com.alunev.ants.mechanics.Direction;
 import com.alunev.ants.mechanics.Order;
 import com.alunev.ants.mechanics.Tile;
@@ -18,12 +17,15 @@ public class CalcState {
     private static final long CALC_TIME_EPSILON = 50;
 
     private final GameSetup gameSetup;
-    private GameState gameState;
 
     // sets that live whole games
-    private Set<Tile> unseenTiles = new HashSet<Tile>();
+    private TileType map[][];
+    private Set<Tile> myAnts = new HashSet<Tile>();
+    private Set<Tile> enemyAnts = new HashSet<Tile>();
+    private Set<Tile> myHills = new HashSet<Tile>();
     private Set<Tile> seenEnemyHills = new HashSet<Tile>();
     private Set<Tile> seenFood = new HashSet<Tile>();
+    private Set<Tile> unseenTiles = new HashSet<Tile>();
     private Set<Tile> motherlandDefenders = new HashSet<Tile>();
 
     // sets that live only turn calculation
@@ -36,7 +38,13 @@ public class CalcState {
 
     public CalcState(GameSetup gameSetup) {
         this.gameSetup = gameSetup;
-        this.unseenTiles = new HashSet<Tile>(gameSetup.getRows() * gameSetup.getCols());
+
+        this.map = new TileType[gameSetup.getRows()][gameSetup.getCols()];
+        for (int i = 0; i < map.length; i++) {
+            for (int j = 0; j < map[0].length; j++) {
+                map[i][j] = TileType.UNKNOWN;
+            }
+        }
 
         for (int i = 0; i < gameSetup.getRows(); i++) {
             for (int j = 0; j < gameSetup.getCols(); j++) {
@@ -79,15 +87,24 @@ public class CalcState {
         return gameSetup;
     }
 
-    public GameState getGameState() {
-        return gameState;
-    }
-
     public void update(GameState gameState) {
-        this.gameState = gameState;
+        // clear all ants from old version of map
+        // copy all visible things on new map to old one
+        for (int i = 0;i < map.length; i++) {
+            for (int j = 0;j < map[0].length;j++) {
+                if (map[i][j] == TileType.MY_ANT) {
+                    map[i][j] = TileType.LAND;
+                }
+                if (gameState.getMap()[i][j] != TileType.UNKNOWN) {
+                    this.map[i][j] = gameState.getMap()[i][j];
+                }
+            }
+        }
 
-        reservedTiles.clear();
-        targetTiles.clear();
+        this.myAnts = gameState.getMyAnts();
+        this.enemyAnts = gameState.getEnemyAnts();
+        this.myHills = gameState.getMyHills();
+        this.seenEnemyHills.addAll(gameState.getEnemyHills());
 
         // remove eaten food
         MapUtils mapUtils = new MapUtils(gameSetup);
@@ -95,20 +112,14 @@ public class CalcState {
         filteredFood.addAll(seenFood);
         for (Tile foodTile : seenFood) {
             if (mapUtils.isVisible(foodTile, gameState.getMyAnts(), gameSetup.getViewRadius2())
-                    && getTyleType(foodTile) != TileType.FOOD) {
+                    && getTileType(foodTile) != TileType.FOOD) {
                 filteredFood.remove(foodTile);
             }
         }
 
         // add new foods
         filteredFood.addAll(gameState.getFoodTiles());
-
         this.seenFood = filteredFood;
-
-        // add new hills to set
-        for (Tile enemyHill : gameState.getEnemyHills()) {
-            seenEnemyHills.add(enemyHill);
-        }
 
         // explore unseen areas
         Set<Tile> copy = new HashSet<Tile>();
@@ -119,20 +130,30 @@ public class CalcState {
             }
         }
 
+        // remove fallen defenders
+        Set<Tile> defenders = new HashSet<Tile>();
+        for (Tile defender : motherlandDefenders) {
+            if (myAnts.contains(defender)) {
+                defenders.add(defender);
+            }
+        }
+        this.motherlandDefenders = defenders;
+
         // prevent stepping on own hill
+        reservedTiles.clear();
         reservedTiles.addAll(gameState.getMyHills());
 
-        this.gameState = gameState;
+        targetTiles.clear();
     }
 
     public boolean haveEnoughAntsForDefense() {
-        return gameState.getMyAnts().size() > 10;
+        return myAnts.size() > 10;
     }
 
     public Set<Tile> getFreeToMoveAnts(List<Order> orders) {
         Set<Tile> freeAnts = new HashSet<Tile>();
 
-        for (Tile tile : gameState.getMyAnts()) {
+        for (Tile tile : myAnts) {
             if (!motherlandDefenders.contains(tile) && !hasOrderForTile(tile, orders)) {
                 freeAnts.add(tile);
             }
@@ -153,8 +174,6 @@ public class CalcState {
 
         return hasOrder;
     }
-
-
 
     /**
      * Returns one or two orthogonal directions from one location to the another.
@@ -198,7 +217,7 @@ public class CalcState {
     }
 
     public boolean isVisible(Tile tile) {
-        return new MapUtils(gameSetup).isVisible(tile, gameState.getMyAnts(), gameSetup.getViewRadius2());
+        return new MapUtils(gameSetup).isVisible(tile, myAnts, gameSetup.getViewRadius2());
     }
 
     public boolean isVisibleForAnt(Tile myAnt, Tile tile) {
@@ -208,7 +227,7 @@ public class CalcState {
     public Order doMoveInDirection(Tile antLoc, Direction direction) {
         // Track all moves, prevent collisions
         Tile newLoc = new MapUtils(gameSetup).getTile(antLoc, direction);
-        if (getTyleType(newLoc).isUnoccupied() && !getReservedTiles().contains(newLoc)) {
+        if (getTileType(newLoc).isUnoccupied() && !getReservedTiles().contains(newLoc)) {
             getReservedTiles().add(newLoc);
             return new Order(antLoc, direction);
         } else {
@@ -242,16 +261,16 @@ public class CalcState {
         return filteredGoals;
     }
 
-    public TileType getTyleType(Tile tile) {
-        return gameState.getMap()[tile.getRow()][tile.getCol()];
+    public TileType getTileType(Tile tile) {
+        return this.map[tile.getRow()][tile.getCol()];
     }
 
-    public boolean isResered(Tile tile) {
-        return reservedTiles.contains(tile);
+    public boolean isReserved(Tile tile) {
+        return this.reservedTiles.contains(tile);
     }
 
     public Set<Tile> getMyHills() {
-        return gameState.getMyHills();
+        return this.myHills;
     }
 
     public void addTarget(Tile tile) {
@@ -259,7 +278,10 @@ public class CalcState {
     }
 
     public Set<Tile> getMyAnts() {
-        // TODO Auto-generated method stub
-        return gameState.getMyAnts();
+        return this.myAnts;
+    }
+
+    public TileType[][] getMap() {
+        return map;
     }
 }

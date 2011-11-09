@@ -34,9 +34,7 @@ public class MyBot {
         List<String> batch = null;
         GameState gameState = new GameState(gameSetup.getRows(), gameSetup.getCols());
         while (!(batch = inputReader.readGameUpdate()).isEmpty()) {
-            gameState.merge(inputParser.parseUpdate(batch, gameSetup));
-
-            astarBot.beforeUpdate(gameState);
+            astarBot.beforeUpdate(inputParser.parseUpdate(batch, gameSetup));
             outputWriter.writeOrders(astarBot.doTurn());
             outputWriter.writeCommand(astarBot.afterUpdate());
         }

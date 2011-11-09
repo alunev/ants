@@ -150,13 +150,14 @@ public class PathFinderTest {
                 new FileReader("testdata/001.map.txt"), gameSetup.getRows(), gameSetup.getCols());
         Simulator simulator = new Simulator(gameSetup, map);
 
+        System.out.println("Starting Map");
         VisualUtils.printMap(map);
 
-        List<Tile> calculatedPath = new ArrayList<Tile>(1);
+        CalcState calcState = new CalcState(gameSetup);
+        List<Tile> calculatedPath = new ArrayList<Tile>();
         calculatedPath.add(null);
-        while (calculatedPath.size() > 0) {
+        while (calculatedPath.size() > 1) {
             GameState gameStateUpdate = new AntsInputParser().parseUpdate(simulator.getGameStateStrings(), gameSetup);
-            CalcState calcState = new CalcState(gameSetup);
             calcState.update(gameStateUpdate);
 
             List<Tile> goals = new ArrayList<Tile>();
@@ -174,6 +175,7 @@ public class PathFinderTest {
 
             simulator.processMove(calculatedPath.get(0), calculatedPath.get(1));
 
+            System.out.println("Map after turn");
             VisualUtils.printMap(simulator.getMap());
         }
     }

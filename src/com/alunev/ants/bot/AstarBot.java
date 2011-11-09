@@ -165,7 +165,7 @@ public class AstarBot implements Bot {
             // find closest unseen tiles
             SortedMap<Integer, LinearRoute> routesForAnt = new TreeMap<Integer, LinearRoute>();
             for (Tile unseenTile : calcState.getUnseenTiles()) {
-                if (calcState.getTyleType(unseenTile).isUnoccupied()) {
+                if (calcState.getTileType(unseenTile).isUnoccupied()) {
                     routesForAnt.put(mapUtils.getDistance(myAnt, unseenTile),
                             new LinearRoute(myAnt, unseenTile));
                 }
@@ -188,7 +188,7 @@ public class AstarBot implements Bot {
 
             PathSpec pathSpec = new PathFinder(calcState, myAnt, goals,
                     new HillEstimator()).getAStarPath();
-            if (pathSpec.getPath().size() > 1 && !calcState.isResered(pathSpec.getPath().get(1))) {
+            if (pathSpec.getPath().size() > 1 && !calcState.isReserved(pathSpec.getPath().get(1))) {
                 orders.add(calcState.doMoveToLocation(myAnt, pathSpec.getPath().get(1)));
                 calcState.addTarget(pathSpec.getGoal());
             }
@@ -281,7 +281,7 @@ public class AstarBot implements Bot {
                 for (DiagDirection direction : DiagDirection.values()) {
                     Tile placeToHold = new MapUtils(calcState.getGameSetup()).getDiagTile(myHill, direction);
 
-                    if (calcState.getTyleType(placeToHold) == TileType.MY_ANT) {
+                    if (calcState.getTileType(placeToHold) == TileType.MY_ANT) {
                         calcState.getMotherlandDefenders().add(placeToHold);
                     }
                 }

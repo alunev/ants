@@ -9,17 +9,18 @@ import com.alunev.ants.mechanics.Tile;
 import com.alunev.ants.mechanics.TileType;
 import com.alunev.ants.simulator.Simulator;
 import com.alunev.ants.utils.VisualUtils;
-import static org.hamcrest.Matchers.*;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
+
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 /**
  * Created by IntelliJ IDEA.
@@ -28,6 +29,58 @@ import java.util.List;
  * Time: 11:50 PM
  */
 public class CalcStateTest {
+    @Test
+    public void testMapUpdate() throws IOException {
+        GameSetup gameSetup = new GameSetup(0, 0, 5, 5, 0, 2, 0, 0, 0);
+
+        CalcState calcStateExpected = new CalcState(gameSetup);
+        calcStateExpected.getMap()[0][0] = TileType.UNKNOWN;
+        calcStateExpected.getMap()[0][1] = TileType.WATER;
+        calcStateExpected.getMap()[0][2] = TileType.WATER;
+        calcStateExpected.getMap()[0][3] = TileType.FOOD;
+        calcStateExpected.getMap()[0][4] = TileType.UNKNOWN;
+        calcStateExpected.getMap()[1][0] = TileType.UNKNOWN;
+        calcStateExpected.getMap()[1][1] = TileType.LAND;
+        calcStateExpected.getMap()[1][2] = TileType.LAND;
+        calcStateExpected.getMap()[1][3] = TileType.LAND;
+        calcStateExpected.getMap()[1][4] = TileType.UNKNOWN;
+        calcStateExpected.getMap()[2][0] = TileType.WATER;
+        calcStateExpected.getMap()[2][1] = TileType.WATER;
+        calcStateExpected.getMap()[2][2] = TileType.WATER;
+        calcStateExpected.getMap()[2][3] = TileType.LAND;
+        calcStateExpected.getMap()[2][4] = TileType.UNKNOWN;
+        calcStateExpected.getMap()[3][0] = TileType.LAND;
+        calcStateExpected.getMap()[3][1] = TileType.MY_ANT;
+        calcStateExpected.getMap()[3][2] = TileType.FOOD;
+        calcStateExpected.getMap()[3][3] = TileType.UNKNOWN;
+        calcStateExpected.getMap()[3][4] = TileType.UNKNOWN;
+        calcStateExpected.getMap()[4][0] = TileType.LAND;
+        calcStateExpected.getMap()[4][1] = TileType.FOOD;
+        calcStateExpected.getMap()[4][2] = TileType.LAND;
+        calcStateExpected.getMap()[4][3] = TileType.UNKNOWN;
+        calcStateExpected.getMap()[4][4] = TileType.UNKNOWN;
+
+        calcStateExpected.getMyAnts().add(new Tile(3, 1));
+        calcStateExpected.getMyHills().add(new Tile(1, 2));
+        calcStateExpected.getSeenFood().add(new Tile(0, 3));
+        calcStateExpected.getSeenFood().add(new Tile(3, 2));
+        calcStateExpected.getSeenFood().add(new Tile(4, 1));
+
+        CalcState calcState = new CalcState(gameSetup);
+
+        InputReader inputReader = new InputReader(new FileInputStream("testdata/game_state.002.txt"));
+        GameState gameStateUpdate = new AntsInputParser().parseUpdate(inputReader.readGameUpdate(), gameSetup);
+        calcState.update(gameStateUpdate);
+
+        inputReader = new InputReader(new FileInputStream("testdata/game_state.003.txt"));
+        gameStateUpdate = new AntsInputParser().parseUpdate(inputReader.readGameUpdate(), gameSetup);
+        calcState.update(gameStateUpdate);
+
+        for (int i = 0; i < calcState.getMap().length; i++) {
+            assertArrayEquals(calcState.getMap()[i], calcState.getMap()[i]);
+        }
+    }
+
     @Test
     public void testSingleUpdate() throws IOException {
         GameSetup gameSetup = new AntsInputParser().parseSetup(

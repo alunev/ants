@@ -69,39 +69,6 @@ public class GameState {
         return map;
     }
 
-    public GameState merge(GameState gameState) {
-        // clear all ants from old version of map
-        // copy all visible things on new map to old one
-        for (int i = 0;i < map.length; i++) {
-            for (int j = 0;j < map[0].length;j++) {
-                if (map[i][j] == TileType.MY_ANT) {
-                    map[i][j] = TileType.LAND;
-                }
-                if (gameState.getMap()[i][j] != TileType.UNKNOWN) {
-                    this.map[i][j] = gameState.getMap()[i][j];
-                }
-            }
-        }
-
-        this.myAnts = gameState.getMyAnts();
-        this.enemyAnts = gameState.getEnemyAnts();
-        this.myHills = gameState.getMyHills();
-        this.enemyHills.addAll(gameState.getEnemyHills());
-
-        Set<Tile> remainingFoodTiles = new HashSet<Tile>();
-        remainingFoodTiles.addAll(foodTiles);
-        for (Tile tile : foodTiles) {
-            if (gameState.getMap()[tile.getRow()][tile.getCol()] != TileType.FOOD
-                    && gameState.getMap()[tile.getRow()][tile.getCol()] != TileType.UNKNOWN) {
-                remainingFoodTiles.remove(tile);
-            }
-        }
-        this.foodTiles = remainingFoodTiles;
-        this.foodTiles.addAll(gameState.getFoodTiles());
-
-        return this;
-    }
-
     @Override
     public int hashCode() {
         final int prime = 31;
