@@ -105,38 +105,48 @@ public class CalcStateTest {
     public void testCoupleSimpleUpdates() throws IOException {
         GameSetup gameSetup = new AntsInputParser().parseSetup(
                 new InputReader(new FileInputStream("testdata/002.game_setup.txt")).readGameSetup());
-        GameState gameStateUpdate = loadGameStateFromMap(gameSetup, "testdata/002.01.map.txt");
+        Simulator simulator = new Simulator(gameSetup);
+        simulator.forceMap("testdata/002.01.map.txt");
 
         CalcState calcState = new CalcState(gameSetup);
-        calcState.update(gameStateUpdate);
+        calcState.update(simulator.getGameStateUpdate());
+        IOUtils.printMap(calcState.getMap());
 
         assertEquals(calcState.getGameSetup(), gameSetup);
         assertThat(calcState.getMyAnts(), hasItem(new Tile(9, 9)));
         assertThat(calcState.getSeenFood(), hasItem(new Tile(11, 8)));
         assertThat(calcState.getFreeToMoveAnts(new ArrayList<Order>()), hasItem(new Tile(9, 9)));
+        assertEquals(TileType.WATER, calcState.getMap()[8][8]);
+        assertEquals(TileType.WATER, calcState.getMap()[8][9]);
+        assertEquals(TileType.WATER, calcState.getMap()[8][10]);
+        assertEquals(TileType.WATER, calcState.getMap()[8][11]);
 
-        gameStateUpdate = loadGameStateFromMap(gameSetup, "testdata/002.02.map.txt");
-        calcState.update(gameStateUpdate);
+        simulator.forceMap("testdata/002.02.map.txt");
+        calcState.update(simulator.getGameStateUpdate());
+        IOUtils.printMap(calcState.getMap());
 
         assertEquals(calcState.getGameSetup(), gameSetup);
         assertThat(calcState.getMyAnts(), hasItem(new Tile(9, 10)));
         assertThat(calcState.getSeenFood(), hasItem(new Tile(11, 8)));
         assertThat(calcState.getFreeToMoveAnts(new ArrayList<Order>()), hasItem(new Tile(9, 10)));
+        assertEquals(TileType.WATER, calcState.getMap()[8][8]);
+        assertEquals(TileType.WATER, calcState.getMap()[8][9]);
+        assertEquals(TileType.WATER, calcState.getMap()[8][10]);
+        assertEquals(TileType.WATER, calcState.getMap()[8][11]);
+        assertEquals(TileType.WATER, calcState.getMap()[8][12]);
 
-        gameStateUpdate = loadGameStateFromMap(gameSetup, "testdata/002.03.map.txt");
-        calcState.update(gameStateUpdate);
+        simulator.forceMap("testdata/002.03.map.txt");
+        calcState.update(simulator.getGameStateUpdate());
+        IOUtils.printMap(calcState.getMap());
 
         assertEquals(calcState.getGameSetup(), gameSetup);
         assertThat(calcState.getMyAnts(), hasItem(new Tile(9, 11)));
         assertThat(calcState.getSeenFood(), hasItems(new Tile(11, 8), new Tile(7, 10)));
         assertThat(calcState.getFreeToMoveAnts(new ArrayList<Order>()), hasItem(new Tile(9, 11)));
-    }
-
-    private GameState loadGameStateFromMap(GameSetup gameSetup, String mapFile) throws IOException {
-        TileType[][] map = IOUtils.readMap(
-                new FileReader(mapFile), gameSetup.getRows(), gameSetup.getCols());
-        Simulator simulator = new Simulator(gameSetup, map);
-
-        return new AntsInputParser().parseUpdate(simulator.getGameStateStrings(), gameSetup);
+        assertEquals(TileType.WATER, calcState.getMap()[8][8]);
+        assertEquals(TileType.WATER, calcState.getMap()[8][9]);
+        assertEquals(TileType.WATER, calcState.getMap()[8][10]);
+        assertEquals(TileType.WATER, calcState.getMap()[8][11]);
+        assertEquals(TileType.WATER, calcState.getMap()[8][12]);
     }
 }

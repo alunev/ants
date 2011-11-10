@@ -37,6 +37,7 @@ public class IOUtils {
             }
             System.out.println();
         }
+        System.out.flush();
     }
 
     public static void printMapWithPath(TileType[][] map, List<Tile> path) {

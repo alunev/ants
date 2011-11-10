@@ -92,9 +92,14 @@ public class CalcState {
         // copy all visible things on new map to old one
         for (int i = 0;i < map.length; i++) {
             for (int j = 0;j < map[0].length;j++) {
+                if (map[i][j] == TileType.WATER) {
+                    continue;
+                }
+
                 if (map[i][j] == TileType.MY_ANT) {
                     map[i][j] = TileType.LAND;
                 }
+
                 if (gameState.getMap()[i][j] != TileType.UNKNOWN) {
                     this.map[i][j] = gameState.getMap()[i][j];
                 }

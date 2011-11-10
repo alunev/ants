@@ -1,14 +1,14 @@
 package com.alunev.ants.bot;
 
-import com.alunev.ants.calculation.MapUtils;
-import com.alunev.ants.io.*;
+import com.alunev.ants.io.AntsInputParser;
+import com.alunev.ants.io.GameSetup;
+import com.alunev.ants.io.InputParser;
+import com.alunev.ants.io.InputReader;
 import com.alunev.ants.mechanics.Order;
 import com.alunev.ants.mechanics.TileType;
 import com.alunev.ants.simulator.Simulator;
 import com.alunev.ants.utils.IOUtils;
 import org.junit.Test;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
 import java.io.FileReader;
@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by IntelliJ IDEA.

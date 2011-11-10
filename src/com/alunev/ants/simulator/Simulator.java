@@ -1,11 +1,16 @@
 package com.alunev.ants.simulator;
 
 import com.alunev.ants.calculation.MapUtils;
+import com.alunev.ants.io.AntsInputParser;
 import com.alunev.ants.io.GameSetup;
+import com.alunev.ants.io.GameState;
 import com.alunev.ants.mechanics.Order;
 import com.alunev.ants.mechanics.Tile;
 import com.alunev.ants.mechanics.TileType;
+import com.alunev.ants.utils.IOUtils;
 
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.*;
 
 public class Simulator {
@@ -13,6 +18,7 @@ public class Simulator {
     private TileType[][] map;
     private Set<Tile> myAnts;
     private Map<TileType, String> typeToStatusCode = new HashMap<TileType, String>();
+    private Set<Tile> reportedWatter = new HashSet<Tile>();
 
     {
         typeToStatusCode.put(TileType.MY_ANT, "a");
@@ -23,9 +29,16 @@ public class Simulator {
     }
 
     public Simulator(GameSetup gameSetup, TileType[][] map) {
-        this.gameSetup = gameSetup;
-        this.map = map;
+        this(gameSetup);
+        forceMap(map);
+    }
 
+    public Simulator(GameSetup gameSetup) {
+        this.gameSetup = gameSetup;
+    }
+
+    public void forceMap(TileType[][] map) {
+        this.map = map;
         this.myAnts = new HashSet<Tile>();
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[0].length; j++) {
@@ -77,6 +90,10 @@ public class Simulator {
         StringBuilder line = new StringBuilder();
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[0].length; j++) {
+                if (map[i][j] == TileType.WATER && reportedWatter.contains(new Tile(i, j))) {
+                    continue;
+                }
+
                 if (map[i][j] != TileType.LAND
                         && new MapUtils(gameSetup).isVisible(new Tile(i,j), myAnts, gameSetup.getViewRadius2())) {
                     line.setLength(0);
@@ -91,11 +108,23 @@ public class Simulator {
                         line.append(0);
                     }
 
+                    if (map[i][j] == TileType.WATER) {
+                        reportedWatter.add(new Tile(i, j));
+                    }
+
                     lines.add(line.toString());
                 }
             }
         }
 
         return lines;
+    }
+
+    public GameState getGameStateUpdate() {
+        return new AntsInputParser().parseUpdate(getGameStateStrings(), gameSetup);
+    }
+
+    public void forceMap(String mapFile) throws IOException {
+        forceMap(IOUtils.readMap(new FileReader(mapFile), gameSetup.getRows(), gameSetup.getCols()));
     }
 }
