@@ -50,17 +50,17 @@ public class AstarBot implements Bot {
     public List<Order> doTurn() {
         orders.clear();
 
-        unblockOwnHill();
+        orders.addAll(unblockOwnHill());
 
-        setupDefense();
+        orders.addAll(setupDefense());
 
-        lookAndMoveForFood();
+        orders.addAll(lookAndMoveForFood());
 
-        attackHills();
+        orders.addAll(attackHills());
 
-        exploreMapMoves();
+        orders.addAll(exploreMapMoves());
 
-        doRandomMoveAfterAll();
+        orders.addAll(doRandomMoveAfterAll());
 
         return orders;
     }
@@ -69,15 +69,17 @@ public class AstarBot implements Bot {
         return "go";
     }
 
-    private void doRandomMoveAfterAll() {
+    public List<Order> doRandomMoveAfterAll() {
+        List<Order> orders = new ArrayList<Order>();
+
         if (calcState.giveUp()) {
-            return;
+            return orders;
         }
 
         Random random = new Random(System.currentTimeMillis());
-        for (Tile tile : calcState.getFreeToMoveAnts(orders)) {
+        for (Tile tile : calcState.getFreeToMoveAnts(this.orders)) {
             if (calcState.giveUp()) {
-                return;
+                return orders;
             }
 
             boolean moved = false;
@@ -87,19 +89,21 @@ public class AstarBot implements Bot {
                 Direction direction = Direction.values()[random.nextInt(4)];
 
                 if ((order = calcState.doMoveInDirection(tile, direction)) != null) {
+                    orders.add(order);
                     moved = true;
                 }
 
                 tries++;
             }
-
-            orders.add(order);
         }
+
+        return orders;
     }
 
-    private void attackHills() {
+    public List<Order> attackHills() {
+        List<Order> orders = new ArrayList<Order>();
         if (calcState.giveUp()) {
-            return;
+            return orders;
         }
 
         MapUtils mapUtils = new MapUtils(calcState.getGameSetup());
@@ -108,10 +112,10 @@ public class AstarBot implements Bot {
         Map<Tile, List<Tile>> antToGoals = new HashMap<Tile, List<Tile>>();
         for (Tile enemyHill : calcState.getSeenEnemyHills()) {
             if (calcState.giveUp()) {
-                return;
+                return orders;
             }
 
-            for (Tile myAnt : calcState.getFreeToMoveAnts(orders)) {
+            for (Tile myAnt : calcState.getFreeToMoveAnts(this.orders)) {
                 if (mapUtils.getDistance(myAnt, enemyHill) < hillAttackRadius) {
                     if (!antToGoals.containsKey(myAnt)) {
                         antToGoals.put(myAnt, new ArrayList<Tile>());
@@ -133,7 +137,7 @@ public class AstarBot implements Bot {
             }
 
             if (calcState.giveUp()) {
-                return;
+                return orders;
             }
 
             PathSpec pathSpec = new PathFinder(calcState,
@@ -144,22 +148,26 @@ public class AstarBot implements Bot {
                 calcState.getTargetTiles().add(pathSpec.getGoal());
             }
         }
+
+        return orders;
     }
 
-    private void exploreMapMoves() {
+    public List<Order> exploreMapMoves() {
+        List<Order> orders = new ArrayList<Order>();
+
         if (calcState.getUnseenTiles().size() == 0 || calcState.giveUp()) {
-            return;
+            return orders;
         }
 
         MapUtils mapUtils = new MapUtils(calcState.getGameSetup());
 
-        for (Tile myAnt : calcState.getFreeToMoveAnts(orders)) {
+        for (Tile myAnt : calcState.getFreeToMoveAnts(this.orders)) {
             if (calcState.hasOrderForTile(myAnt, orders)) {
                 continue;
             }
 
             if (calcState.giveUp()) {
-                return;
+                return orders;
             }
 
             // find closest unseen tiles
@@ -193,11 +201,15 @@ public class AstarBot implements Bot {
                 calcState.addTarget(pathSpec.getGoal());
             }
         }
+
+        return orders;
     }
 
-    private void lookAndMoveForFood() {
+    public List<Order> lookAndMoveForFood() {
+        List<Order> orders = new ArrayList<Order>();
+
         if (calcState.giveUp()) {
-            return;
+            return orders;
         }
 
         MapUtils mapUtils = new MapUtils(calcState.getGameSetup());
@@ -206,11 +218,11 @@ public class AstarBot implements Bot {
         Map<Tile, List<Tile>> antToGoals = new HashMap<Tile, List<Tile>>();
         for (Tile foodLoc : calcState.getSeenFood()) {
             if (calcState.giveUp()) {
-                return;
+                return orders;
             }
 
             Map<Tile, Integer> antToDistance = new HashMap<Tile, Integer>();
-            for (Tile myAnt : calcState.getFreeToMoveAnts(orders)) {
+            for (Tile myAnt : calcState.getFreeToMoveAnts(this.orders)) {
                 antToDistance.put(myAnt, mapUtils.getDistance(myAnt, foodLoc));
             }
 
@@ -239,7 +251,7 @@ public class AstarBot implements Bot {
             }
 
             if (calcState.giveUp()) {
-                return;
+                return orders;
             }
 
             PathSpec pathSpec = new PathFinder(calcState,
@@ -250,12 +262,15 @@ public class AstarBot implements Bot {
                 calcState.addTarget(pathSpec.getGoal());
             }
         }
+
+        return orders;
     }
 
-    private void unblockOwnHill() {
+    public List<Order> unblockOwnHill() {
+        List<Order> orders = new ArrayList<Order>();
         for(Tile hill : calcState.getMyHills()) {
             if (calcState.giveUp()) {
-                return;
+                return orders;
             }
 
             if (calcState.getMyAnts().contains(hill) && !calcState.hasOrderForTile(hill, orders)) {
@@ -268,14 +283,17 @@ public class AstarBot implements Bot {
                 }
             }
         }
+
+        return orders;
     }
 
-    private void setupDefense() {
+    public List<Order> setupDefense() {
         // setup defense of our Motherland
+        List<Order> orders = new ArrayList<Order>();
         if (calcState.haveEnoughAntsForDefense()) {
             for (Tile myHill : calcState.getMyHills()) {
                 if (calcState.giveUp()) {
-                    return;
+                    return orders;
                 }
 
                 for (DiagDirection direction : DiagDirection.values()) {
@@ -289,5 +307,11 @@ public class AstarBot implements Bot {
         } else {
             calcState.getMotherlandDefenders().clear();
         }
+
+        return orders;
+    }
+
+    public CalcState getCalcState() {
+        return calcState;
     }
 }

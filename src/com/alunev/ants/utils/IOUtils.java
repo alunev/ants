@@ -10,7 +10,7 @@ import java.util.Map;
 import com.alunev.ants.mechanics.Tile;
 import com.alunev.ants.mechanics.TileType;
 
-public class VisualUtils {
+public class IOUtils {
     private static Map<TileType, String> typeToSymbol = new HashMap<TileType, String>();
     private static Map<String, TileType> symbolToType = new HashMap<String, TileType>();
 

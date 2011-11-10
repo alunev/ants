@@ -11,7 +11,7 @@ import java.util.*;
 public class Simulator {
     private GameSetup gameSetup;
     private TileType[][] map;
-    private Tile myAnt;
+    private Set<Tile> myAnts;
     private Map<TileType, String> typeToStatusCode = new HashMap<TileType, String>();
 
     {
@@ -26,10 +26,11 @@ public class Simulator {
         this.gameSetup = gameSetup;
         this.map = map;
 
+        this.myAnts = new HashSet<Tile>();
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[0].length; j++) {
                 if (map[i][j] == TileType.MY_ANT) {
-                    this.myAnt = new Tile(i,j);
+                    this.myAnts.add(new Tile(i,j));
                     break;
                 }
             }
@@ -41,10 +42,7 @@ public class Simulator {
             MapUtils mapUtils = new MapUtils(gameSetup);
             Tile targetTile = mapUtils.getTile(order.getTile(), order.getDirection());
 
-            if (map[targetTile.getRow()][targetTile.getCol()].isPassable()) {
-                map[order.getTile().getRow()][order.getTile().getCol()] = TileType.LAND;
-                map[targetTile.getRow()][targetTile.getCol()] = TileType.MY_ANT;
-            }
+            processMove(order.getTile(), targetTile);
         }
     }
 
@@ -53,7 +51,10 @@ public class Simulator {
                 map[from.getRow()][from.getCol()] = TileType.LAND;
                 map[to.getRow()][to.getCol()] = TileType.MY_ANT;
 
-                myAnt = new Tile(to.getRow(), to.getCol());
+                myAnts.remove(from);
+                myAnts.add(to);
+            } else {
+                throw new RuntimeException("Invalid move from " + from + " to " + to);
             }
     }
 
@@ -61,11 +62,19 @@ public class Simulator {
         return this.map;
     }
 
+    public TileType[][] getMapCopy() {
+        TileType[][] copy = new TileType[map.length][map[0].length];
+
+        for (int i = 0;i < map.length;i++) {
+            System.arraycopy(map[i], 0, copy[i], 0, map[0].length);
+        }
+
+        return copy;
+    }
+
     public List<String> getGameStateStrings() {
         List<String> lines = new ArrayList<String>();
         StringBuilder line = new StringBuilder();
-        Set<Tile> myAnts = new HashSet<Tile>();
-        myAnts.add(myAnt);
         for (int i = 0; i < map.length; i++) {
             for (int j = 0; j < map[0].length; j++) {
                 if (map[i][j] != TileType.LAND

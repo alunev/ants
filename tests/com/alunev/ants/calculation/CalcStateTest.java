@@ -8,7 +8,7 @@ import com.alunev.ants.mechanics.Order;
 import com.alunev.ants.mechanics.Tile;
 import com.alunev.ants.mechanics.TileType;
 import com.alunev.ants.simulator.Simulator;
-import com.alunev.ants.utils.VisualUtils;
+import com.alunev.ants.utils.IOUtils;
 import org.junit.Test;
 
 import java.io.FileInputStream;
@@ -85,7 +85,7 @@ public class CalcStateTest {
     public void testSingleUpdate() throws IOException {
         GameSetup gameSetup = new AntsInputParser().parseSetup(
                 new InputReader(new FileInputStream("testdata/001.game_setup.txt")).readGameSetup());
-        TileType[][] map = VisualUtils.readMap(
+        TileType[][] map = IOUtils.readMap(
                 new FileReader("testdata/001.map.txt"), gameSetup.getRows(), gameSetup.getCols());
         Simulator simulator = new Simulator(gameSetup, map);
 
@@ -133,7 +133,7 @@ public class CalcStateTest {
     }
 
     private GameState loadGameStateFromMap(GameSetup gameSetup, String mapFile) throws IOException {
-        TileType[][] map = VisualUtils.readMap(
+        TileType[][] map = IOUtils.readMap(
                 new FileReader(mapFile), gameSetup.getRows(), gameSetup.getCols());
         Simulator simulator = new Simulator(gameSetup, map);
 

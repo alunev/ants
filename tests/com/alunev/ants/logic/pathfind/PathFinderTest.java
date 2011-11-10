@@ -1,30 +1,21 @@
 package com.alunev.ants.logic.pathfind;
 
-import static org.junit.Assert.assertEquals;
+import com.alunev.ants.calculation.CalcState;
+import com.alunev.ants.io.*;
+import com.alunev.ants.mechanics.Tile;
+import com.alunev.ants.mechanics.TileType;
+import com.alunev.ants.simulator.Simulator;
+import com.alunev.ants.utils.IOUtils;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import com.alunev.ants.mechanics.Order;
-import com.alunev.ants.mechanics.TileType;
-import com.alunev.ants.simulator.Simulator;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import com.alunev.ants.calculation.CalcState;
-import com.alunev.ants.io.AntsInputParser;
-import com.alunev.ants.io.GameSetup;
-import com.alunev.ants.io.GameState;
-import com.alunev.ants.io.InputParser;
-import com.alunev.ants.io.InputReader;
-import com.alunev.ants.logic.pathfind.FoodEstimator;
-import com.alunev.ants.logic.pathfind.PathFinder;
-import com.alunev.ants.mechanics.Tile;
-import com.alunev.ants.utils.VisualUtils;
+import static org.junit.Assert.assertEquals;
 
 public class PathFinderTest {
 
@@ -60,7 +51,7 @@ public class PathFinderTest {
 
         List<Tile> calculatedPath = pathFinder.getAStarPath().getPath();
 
-        VisualUtils.printMapWithPath(gameState.getMap(), calculatedPath);
+        IOUtils.printMapWithPath(gameState.getMap(), calculatedPath);
 
         assertEquals(path, calculatedPath);
     }
@@ -96,7 +87,7 @@ public class PathFinderTest {
 
         List<Tile> calculatedPath = pathFinder.getAStarPath().getPath();
 
-        VisualUtils.printMapWithPath(gameState.getMap(), calculatedPath);
+        IOUtils.printMapWithPath(gameState.getMap(), calculatedPath);
 
         assertEquals(path, calculatedPath);
     }
@@ -137,7 +128,7 @@ public class PathFinderTest {
 
         List<Tile> calculatedPath = pathFinder.getAStarPath().getPath();
 
-        VisualUtils.printMapWithPath(gameState.getMap(), calculatedPath);
+        IOUtils.printMapWithPath(gameState.getMap(), calculatedPath);
 
         assertEquals(path, calculatedPath);
     }
@@ -146,12 +137,12 @@ public class PathFinderTest {
     public void testAStarPathRealtime() throws Exception {
         GameSetup gameSetup = new AntsInputParser().parseSetup(
                 new InputReader(new FileInputStream("testdata/001.game_setup.txt")).readGameSetup());
-        TileType[][] map = VisualUtils.readMap(
+        TileType[][] map = IOUtils.readMap(
                 new FileReader("testdata/001.map.txt"), gameSetup.getRows(), gameSetup.getCols());
         Simulator simulator = new Simulator(gameSetup, map);
 
         System.out.println("Starting Map");
-        VisualUtils.printMap(map);
+        IOUtils.printMap(map);
 
         CalcState calcState = new CalcState(gameSetup);
         List<Tile> calculatedPath = new ArrayList<Tile>();
@@ -176,7 +167,45 @@ public class PathFinderTest {
             simulator.processMove(calculatedPath.get(0), calculatedPath.get(1));
 
             System.out.println("Map after turn");
-            VisualUtils.printMap(simulator.getMap());
+            IOUtils.printMap(simulator.getMap());
+        }
+    }
+
+    @Test
+    public void testAStarPathMap003() throws Exception {
+        GameSetup gameSetup = new AntsInputParser().parseSetup(
+                new InputReader(new FileInputStream("testdata/003.game_setup.txt")).readGameSetup());
+        TileType[][] map = IOUtils.readMap(
+                new FileReader("testdata/003.map.txt"), gameSetup.getRows(), gameSetup.getCols());
+        Simulator simulator = new Simulator(gameSetup, map);
+
+        System.out.println("Starting Map");
+        IOUtils.printMap(map);
+
+        CalcState calcState = new CalcState(gameSetup);
+        List<Tile> calculatedPath = new ArrayList<Tile>();
+        calculatedPath.add(null);
+        while (calculatedPath.size() > 1) {
+            GameState gameStateUpdate = new AntsInputParser().parseUpdate(simulator.getGameStateStrings(), gameSetup);
+            calcState.update(gameStateUpdate);
+
+            List<Tile> goals = new ArrayList<Tile>();
+            for (Tile tile : calcState.getSeenFood()) {
+                goals.add(tile);
+            }
+
+            Tile myAnt = null;
+            for (Tile tile : calcState.getMyAnts()) {
+                myAnt = tile;
+            }
+
+            PathFinder pathFinder = new PathFinder(calcState, myAnt, goals, new FoodEstimator(calcState));
+            calculatedPath = pathFinder.getAStarPath().getPath();
+
+            simulator.processMove(calculatedPath.get(0), calculatedPath.get(1));
+
+            System.out.println("Map after turn");
+            IOUtils.printMap(simulator.getMap());
         }
     }
 }
