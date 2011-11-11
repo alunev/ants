@@ -84,7 +84,7 @@ public class AstarBot implements Bot {
 
             boolean moved = false;
             int tries = 0;
-            Order order = null;
+            Order order;
             while (!moved && tries++ < 10) {
                 Direction direction = Direction.values()[random.nextInt(4)];
 
@@ -144,8 +144,11 @@ public class AstarBot implements Bot {
                     myAnt, goals,
                     new HillEstimator()).getAStarPath();
             if (pathSpec.getPath().size() > 1) {
-                orders.add(calcState.doMoveToLocation(myAnt, pathSpec.getPath().get(1)));
-                calcState.getTargetTiles().add(pathSpec.getGoal());
+                Order order = calcState.doMoveToLocation(myAnt, pathSpec.getPath().get(1));
+                if (order != null) {
+                    orders.add(order);
+                    calcState.getTargetTiles().add(pathSpec.getGoal());
+                }
             }
         }
 
@@ -197,8 +200,11 @@ public class AstarBot implements Bot {
             PathSpec pathSpec = new PathFinder(calcState, myAnt, goals,
                     new HillEstimator()).getAStarPath();
             if (pathSpec.getPath().size() > 1 && !calcState.isReserved(pathSpec.getPath().get(1))) {
-                orders.add(calcState.doMoveToLocation(myAnt, pathSpec.getPath().get(1)));
-                calcState.addTarget(pathSpec.getGoal());
+                Order order;
+                if ((order = calcState.doMoveToLocation(myAnt, pathSpec.getPath().get(1))) != null) {
+                    orders.add(order);
+                    calcState.addTarget(pathSpec.getGoal());
+                }
             }
         }
 
@@ -258,8 +264,11 @@ public class AstarBot implements Bot {
                     myAnt, goals,
                     new FoodEstimator(calcState)).getAStarPath();
             if (pathSpec.getPath().size() > 1) {
-                orders.add(calcState.doMoveToLocation(myAnt, pathSpec.getPath().get(1)));
-                calcState.addTarget(pathSpec.getGoal());
+                Order order = calcState.doMoveToLocation(myAnt, pathSpec.getPath().get(1));
+                if (order != null) {
+                    orders.add(order);
+                    calcState.addTarget(pathSpec.getGoal());
+                }
             }
         }
 
